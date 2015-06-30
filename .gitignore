@@ -1,3 +1,12 @@
+#Contains twitter API keys/settings
+apiKeys.py
+botSettings.py
+
+#Logs/other
+RetweetListener*.txt
+perfCounters*.pydat
+privateNotes
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
