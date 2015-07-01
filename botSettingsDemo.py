@@ -3,7 +3,7 @@ import apiKeys
 
 getConsumerKeys = apiKeys.getConsumerKeys
 getAccesKeys = apiKeys.getAccesKeys
-saveInterval = 229
+saveInterval = 1777
 tweetPerBracket = 5
 
 # Change these when actually retweeting

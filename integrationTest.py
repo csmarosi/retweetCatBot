@@ -170,7 +170,7 @@ def testHeavyLoad():
         pass
     # IO is boring and paid gradually
     pl.PerformanceListener.saveData = x
-    rt.RetweetListener.pprint = x
+    rt.RetweetListener._logTweet = x
     listeners = createListeners()
     createAndSendTweet(listeners, 1, 0)
     checkTimeMachine(listeners, 2)

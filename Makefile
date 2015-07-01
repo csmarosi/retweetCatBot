@@ -3,6 +3,7 @@
 all:
 	test -L botSettings.py || ln -s botSettingsDemo.py botSettings.py
 	python3 PerformanceListenerTest.py
+	python3 RetweetListenerTest.py
 	time python3 -m pytest -vv -s integrationTest.py
 	pyflakes3 *py
 	pep8 *py
