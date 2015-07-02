@@ -17,19 +17,6 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
         self.retweeted = {}
         self.performance = {}
 
-    def onStart(self):
-        d = self.persistenceListener.loadData(fileName)
-        if d:
-            (self.perfCounters, self.retweeted, self.performance) = d
-
-    def saveData(self):
-        d = (self.perfCounters, self.retweeted, self.performance)
-        self.persistenceListener.saveData(fileName, d)
-
-    def onStop(self):
-        self.saveData()
-        self.stop()
-
     def _createRetweetedDict(self, cB):
         if cB not in self.retweeted:
             self.retweeted[cB] = {'rtC': 0, 'rtId': []}
@@ -65,6 +52,27 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
         self.performance[lastBracket] = (yourScore, topScore)
         return lastBracket, self.performance[lastBracket]
 
+    def _createPerfCounterDict(self, cB, tB):
+        if cB not in self.perfCounters:
+            self.perfCounters[cB] = {}
+        cC = self.perfCounters[cB]
+        if tB not in cC:
+            cC[tB] = {42: []}
+        return cC[tB]
+
+    def onStart(self):
+        d = self.persistenceListener.loadData(fileName)
+        if d:
+            (self.perfCounters, self.retweeted, self.performance) = d
+
+    def saveData(self):
+        d = (self.perfCounters, self.retweeted, self.performance)
+        self.persistenceListener.saveData(fileName, d)
+
+    def onStop(self):
+        self.saveData()
+        self.stop()
+
     def addReTweetedIfCan(self, tweet, currentBracket):
         rt = self._createRetweetedDict(currentBracket)
         isAlreadyRetweeted = tweet['id'] in rt['rtId']
@@ -75,14 +83,6 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
             return True
         else:
             return False
-
-    def _createPerfCounterDict(self, cB, tB):
-        if cB not in self.perfCounters:
-            self.perfCounters[cB] = {}
-        cC = self.perfCounters[cB]
-        if tB not in cC:
-            cC[tB] = {42: []}
-        return cC[tB]
 
     def onChangeBracket(self, oldBracket):
         b, p = self._calculateResult(oldBracket)

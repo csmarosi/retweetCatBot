@@ -23,13 +23,16 @@ class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
     def _getCurrentTime(self):
         return int(time.time())
 
-    def onChangeBracketInternal(self, currentTime):
-        cB = self.getBracket(currentTime)
-        if self._currentBracket != cB:
-            for k, v in self.actors.items():
-                # TODO: get is needed for testing
-                v.onChangeBracket(self._currentBracket).get()
-            self._currentBracket = cB
+    def _sendTweetTo(self, method, tweet, currentTime):
+        for _, v in self.actors.items():
+            if 'processTweet' == method:
+                v.processTweet(tweet)
+            elif 'processFilteredTweet' == method:
+                v.processFilteredTweet(tweet, currentTime)
+
+    def _sendSave(self):
+        for _, v in self.actors.items():
+            v.saveData()
 
     def onStart(self):
         for _, v in self.actors.items():
@@ -39,17 +42,13 @@ class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
         for _, v in self.actors.items():
             v.onStop()
 
-    def _sendTweetTo(self, method, tweet, currentTime):
-        if 'processTweet' == method:
-            for k, v in self.actors.items():
-                v.processTweet(tweet)
-        elif 'processFilteredTweet' == method:
-            for k, v in self.actors.items():
-                v.processFilteredTweet(tweet, currentTime)
-
-    def _sendSave(self):
-        for k, v in self.actors.items():
-            v.saveData()
+    def onChangeBracketInternal(self, currentTime):
+        cB = self.getBracket(currentTime)
+        if self._currentBracket != cB:
+            for _, v in self.actors.items():
+                # TODO: get is needed for testing
+                v.onChangeBracket(self._currentBracket).get()
+            self._currentBracket = cB
 
     def processTweet(self, tweet):
         currentTime = self._getCurrentTime()
