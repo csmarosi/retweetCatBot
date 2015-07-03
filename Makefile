@@ -1,4 +1,4 @@
-.PHONY : all clean
+.PHONY : all clean cleandata
 
 all:
 	test -L botSettings.py || ln -s botSettingsDemo.py botSettings.py
@@ -10,3 +10,6 @@ all:
 
 clean:
 	rm -rf __pycache__/ *.pyc perfCountersTest.pydat RetweetListenerTest.txt
+
+cleandata:
+	rm -vf RetweetListener.txt perfCounters.pydat

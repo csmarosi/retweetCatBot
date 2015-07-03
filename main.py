@@ -25,7 +25,11 @@ class MagicListener(tweepy.StreamListener):
         return True
 
     def on_error(self, status):
+        self.distributorListener.stop()
         print(status)
+
+    def on_exception(self, exception):
+        self.distributorListener.stop()
 
 
 def main():
