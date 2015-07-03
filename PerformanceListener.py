@@ -60,6 +60,12 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
             cC[tB] = {42: []}
         return cC[tB]
 
+    def _prunePerfCounterDict(self, cB):
+        keys = list(self.perfCounters.keys())
+        for key in keys:
+            if key + botSettings.bracketWidth < cB:
+                del self.perfCounters[key]
+
     def onStart(self):
         d = self.persistenceListener.loadData(fileName)
         if d:
@@ -87,7 +93,7 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
     def onChangeBracket(self, oldBracket):
         b, p = self._calculateResult(oldBracket)
         self.actors['RetweetListener'].retweetPerformance(b, p)
-        # TODO: prune old perfCounters/etc entries
+        self._prunePerfCounterDict(oldBracket)
 
     def processFilteredTweet(self, tweet, currentTime):
         cB = self.getBracket(currentTime)

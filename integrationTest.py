@@ -153,15 +153,27 @@ def testPerformanceCalculationFewTweets():
     assert perf.performance.get()[2 * bW] == ((1 + 2), (3 + 4))
 
     checkTimeMachine(listeners, 5)
+    sendTweet(listeners, createTweet(4, 81, 2))
     sendTweet(listeners, createTweet(5, 612776279041945600, 1))
     assert perf.performance.get()[3 * bW] == (3, 5)
 
     checkTimeMachine(listeners, 6)
-    assert perf.performance.get()[4 * bW] == (0, 1)
+    assert perf.performance.get()[4 * bW] == (1, 2)
+    assert perf.perfCounters.get() == {
+        4 * bW: {4 * bW: {42: [(-1, 81)], 81: 1}},
+        5 * bW: {4 * bW: {42: [(-2, 81)], 81: 2},
+                 5 * bW: {42: [(-1, 612776279041945600)],
+                          612776279041945600: 1}}}
 
     checkTimeMachine(listeners, 7)
+    assert perf.perfCounters.get() == {
+        5 * bW: {4 * bW: {42: [(-2, 81)], 81: 2},
+                 5 * bW: {42: [(-1, 612776279041945600)],
+                          612776279041945600: 1}}}
+
     checkTimeMachine(listeners, 8)
     assert perf.performance.get()[6 * bW] == (0, 0)
+    assert perf.perfCounters.get() == {}
     listeners['DistributorListener'].stop()
 
 
