@@ -63,7 +63,3 @@ class TestNormalWorking(unittest.TestCase):
         self.o.processFilteredTweet(createTweet(4, 0), 1435536000 + day - 1)
         self.o.processFilteredTweet(createTweet(5, -1), 1435536000 + day)
         self.assertEqual(self.o.poster.rt, [2, 3, 5])
-
-
-if __name__ == '__main__':
-    unittest.main()

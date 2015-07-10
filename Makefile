@@ -2,14 +2,17 @@
 
 all:
 	test -L botSettings.py || ln -s botSettingsDemo.py botSettings.py
-	python3 PerformanceListenerTest.py
-	python3 RetweetListenerTest.py
-	time python3 -m pytest -vv -s integrationTest.py
-	pyflakes3 *py
+	coverage erase
+	coverage run -p --source . -m py.test \
+        PerformanceListenerTest.py RetweetListenerTest.py
+	time coverage run -p --source . -m py.test -vv -s integrationTest.py
+	coverage combine && coverage report && coverage html
+	pyflakes *py
 	pep8 *py
 
 clean:
-	rm -rf __pycache__/ *.pyc perfCountersTest.pydat RetweetListenerTest.txt
+	rm -rf __pycache__/ *.pyc htmlcov/ .coverage \
+        perfCountersTest.pydat RetweetListenerTest.txt
 
 cleandata:
 	rm -vf RetweetListener.txt perfCounters.pydat

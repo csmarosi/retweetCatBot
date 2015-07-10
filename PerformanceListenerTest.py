@@ -41,7 +41,3 @@ class TestNormalWorking(unittest.TestCase):
                     613417367465373696: 279,
                     42: [(-279, 613417367465373696)],
                     }}})
-
-
-if __name__ == '__main__':
-    unittest.main()
