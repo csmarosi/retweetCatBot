@@ -5,6 +5,7 @@ import ListenerBase as lb
 import DistributorListener as distL
 import PerformanceListener as pl
 import RetweetListener as rt
+from time import sleep
 
 
 def createListeners():
@@ -187,7 +188,36 @@ def testHeavyLoad():
     # TODO: this takes a long-long time!
     hundred = 1  # stream API gives ~3 cat per sec, so this tests a daily load
     for i in range(3*24*36*hundred):
-        id = random.randint(1, 612776279041945600)
+        id = random.randint(101, 612776279041945600)
         retweet = random.randint(1, 987)
         sendTweet(listeners, createTweet(1, id, retweet), soft=True)
+    listeners['DistributorListener'].stop()
+
+
+def test_exceptionsAreSwallowed_andNoOneCares():
+    listeners = createListeners()
+    createAndSendTweet(listeners, 1, 0)
+    checkTimeMachine(listeners, 2)
+
+    def x(*args):
+        if 2 == random.randint(1, 6):
+            raise Exception()
+    rt.RetweetListener._logTweet = x
+    idSet = {42}
+    for i in range(198):
+        id = random.randint(101, 612776279041945600)
+        idSet.add(id)
+        retweet = random.randint(1, 154)
+        sendTweet(listeners, createTweet(2, id, retweet), soft=True)
+    sleep(0.1)  # TODO: find out the way to do proper synchronization!
+
+    def x(*args):
+        pass
+    rt.RetweetListener._logTweet = x
+    createAndSendTweet(listeners, 3, 2)
+    perfCounters = listeners['PerformanceListener'].perfCounters.get()
+    bW = botSettings.bracketWidth
+    assert set(perfCounters.keys()) == {bW, 2*bW, 3*bW}
+    assert set(perfCounters[2*bW][2*bW].keys()) == idSet
+    # TODO: check what was retweeted
     listeners['DistributorListener'].stop()
