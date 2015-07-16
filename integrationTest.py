@@ -136,15 +136,13 @@ def testPerformanceCalculationFewTweets():
 
     sendTweet(listeners, createTweet(3, 31, 0))
     sendTweet(listeners, createTweet(3, 31, 1))  # cannot retweet again
-# Test reloading
-    perf.saveData().get()
-    sendTweet(listeners, createTweet(3, 31, 41))
-    sendTweet(listeners, createTweet(3, 32, 42))
-    perf.onStart().get()
+# Test reloading: Send non-retweetable; otherwise it is saved after a retweet
+    sendTweet(listeners, createTweet(3, 31, 41))  # forgotten tweet
+    sendTweet(listeners, createTweet(2, 22, 42))
+    listeners['DistributorListener'].onStart().get()
     sendTweet(listeners, createTweet(3, 32, 0))
     sendTweet(listeners, createTweet(3, 33, 3))
 
-    sendTweet(listeners, createTweet(3, 31, 1))
     sendTweet(listeners, createTweet(3, 32, 2))
     assert perf.performance.get()[bW] == (11, (21 + 17))
 
@@ -155,7 +153,7 @@ def testPerformanceCalculationFewTweets():
     checkTimeMachine(listeners, 5)
     sendTweet(listeners, createTweet(4, 81, 2))
     sendTweet(listeners, createTweet(5, 612776279041945600, 1))
-    assert perf.performance.get()[3 * bW] == (3, 5)
+    assert perf.performance.get()[3 * bW] == (2, 5)
 
     checkTimeMachine(listeners, 6)
     assert perf.performance.get()[4 * bW] == (1, 2)

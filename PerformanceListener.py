@@ -86,6 +86,7 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
         if hasSpace and not isAlreadyRetweeted:
             rt['rtC'] += tweet['retweet_count']
             rt['rtId'] += [tweet['id']]
+            self.saveData()
             return True
         else:
             return False
