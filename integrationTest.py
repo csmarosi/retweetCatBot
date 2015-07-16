@@ -42,12 +42,18 @@ def checkTimeMachine(listeners, number):
 
 
 def createTweet(time, id, rt):
-    return {'retweeted_status':
-            {"created_at": botSettings.bracketWidth * time,
-             "id": id,
-             "entities": {"media": None},
-             "retweet_count": rt,
-             "user": {"followers_count": 42}}}
+    user = {"followers_count": 42, 'screen_name': 'lo'}
+    return {'id': 42,
+            "created_at": botSettings.bracketWidth * time,
+            'retweeted_status': {
+                "created_at": botSettings.bracketWidth * time,
+                "id": id,
+                "entities": {"media": None},
+                'text': 'Blah',
+                'favorite_count': rt,
+                "retweet_count": rt,
+                "user": user},
+            "user": user}
 
 
 def sendTweet(l, tweet, soft=False):
@@ -57,9 +63,10 @@ def sendTweet(l, tweet, soft=False):
         # get(): Tweets must arrive when I ask for counters
         l['DistributorListener'].processTweet(tweet).get()
         now = distL.DistributorListener._getCurrentTime(42)
+        tw = createTweet(0, 4242, 1)
         # get(): Force all RT messages to be sent
         l['RetweetListener'].processFilteredTweet(
-            createTweet(0, 4242, 1)['retweeted_status'], now).get()
+            tw['retweeted_status'], now, tw).get()
 
 
 def createAndSendTweet(listeners, now, rtInc):

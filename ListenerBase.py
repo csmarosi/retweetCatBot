@@ -36,6 +36,3 @@ class ListenerBase(object):
 
     def processTweet(self, tweet):
         pass
-
-    def processFilteredTweet(self, tweet, currentTime):
-        pass

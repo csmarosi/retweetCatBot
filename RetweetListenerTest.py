@@ -56,10 +56,12 @@ class TestNormalWorking(unittest.TestCase):
         def x(self, t):
             return 1435536000
         lb.ListenerBase._getTweetTime = x
-        self.o.processFilteredTweet(createTweet(1, 123), 1435536000)
-        self.o.processFilteredTweet(createTweet(2, 124), 1435536000)
+        self.o.processFilteredTweet(createTweet(1, 123), 1435536000, None)
+        self.o.processFilteredTweet(createTweet(2, 124), 1435536000, None)
         day = int(3600 * 24 * 0.95)
-        self.o.processFilteredTweet(createTweet(3, 2), 1435536000 + day - 1)
-        self.o.processFilteredTweet(createTweet(4, 0), 1435536000 + day - 1)
-        self.o.processFilteredTweet(createTweet(5, -1), 1435536000 + day)
+        self.o.processFilteredTweet(createTweet(3, 2), 1435536000 + day - 1,
+                                    None)
+        self.o.processFilteredTweet(createTweet(4, 0), 1435536000 + day - 1,
+                                    None)
+        self.o.processFilteredTweet(createTweet(5, -1), 1435536000 + day, None)
         self.assertEqual(self.o.poster.rt, [2, 3, 5])

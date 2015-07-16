@@ -23,12 +23,12 @@ class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
     def _getCurrentTime(self):
         return int(time.time())
 
-    def _sendTweetTo(self, method, tweet, currentTime):
+    def _sendTweetTo(self, method, tweet, currentTime, fullTweet=None):
         for _, v in self.actors.items():
             if 'processTweet' == method:
                 v.processTweet(tweet)
             elif 'processFilteredTweet' == method:
-                v.processFilteredTweet(tweet, currentTime)
+                v.processFilteredTweet(tweet, currentTime, fullTweet)
 
     def _sendSave(self):
         for _, v in self.actors.items():
@@ -62,4 +62,5 @@ class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
             if 'entities' in rt and 'media' in rt['entities']:
                 dT = self.getBracket(currentTime) - self.getTweetBracket(rt)
                 if dT / botSettings.bracketWidth < 3:
-                    self._sendTweetTo('processFilteredTweet', rt, currentTime)
+                    self._sendTweetTo('processFilteredTweet',
+                                      rt, currentTime, tweet)

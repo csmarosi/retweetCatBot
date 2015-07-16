@@ -96,7 +96,7 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
         self.actors['RetweetListener'].retweetPerformance(b, p)
         self._prunePerfCounterDict(oldBracket)
 
-    def processFilteredTweet(self, tweet, currentTime):
+    def processFilteredTweet(self, tweet, currentTime, fullTweet):
         cB = self.getBracket(currentTime)
         tB = self.getTweetBracket(tweet)
         tId = tweet['id']

@@ -33,7 +33,7 @@ class TestNormalWorking(unittest.TestCase):
             self.now - self.now % botSettings.bracketWidth)
 
     def test_dict(self):
-        self.o.processFilteredTweet(tweet, self.now)
+        self.o.processFilteredTweet(tweet, self.now, None)
         self.assertEqual(
             self.o.perfCounters,
             {self.o.getBracket(self.now): {

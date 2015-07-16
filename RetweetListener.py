@@ -1,9 +1,9 @@
 from time import strftime, gmtime
-import json
 import pykka
 import botSettings
 import ListenerBase as lb
 import PostTweet
+import TweetLogger
 
 
 fileName = 'RetweetListener.txt'
@@ -15,11 +15,10 @@ class RetweetListener(lb.ListenerBase, pykka.ThreadingActor):
     def __init__(self):
         super(RetweetListener, self).__init__()
         self.poster = PostTweet.PostTweet()
+        self.tweetLogger = TweetLogger.TweetLogger()
 
     def _logTweet(self, tweet):
-        d = json.dumps(tweet, sort_keys=True, indent=4, separators=(',', ': '))
-        with open(fileName, 'a') as f:
-            f.write(d)
+        self.tweetLogger.logTweet(tweet, fileName)
 
     def _retweet(self, tweet, currentBracket):
         perf = self.actors['PerformanceListener']
@@ -33,8 +32,8 @@ class RetweetListener(lb.ListenerBase, pykka.ThreadingActor):
         if followers > botSettings.followMax * (1 - bStat / cutoff):
             self._retweet(tweet, cB)
 
-    def processFilteredTweet(self, tweet, currentTime):
-        self._logTweet(tweet)
+    def processFilteredTweet(self, tweet, currentTime, fullTweet):
+        self._logTweet(fullTweet)
         cB = self.getBracket(currentTime)
         if cB == self.getTweetBracket(tweet):
             bStat = float(currentTime - cB) / botSettings.bracketWidth
