@@ -171,19 +171,6 @@ def testPerformanceCalculationFewTweets():
     tweetSender.listeners['DistributorListener'].stop()
 
 
-def testHeavyLoad():
-    tweetSender = TweetSender()
-    tweetSender.createAndSendTweet(1, 0)
-    tweetSender.checkTimeMachine(2)
-    # TODO: this takes a long-long time!
-    hundred = 1  # stream API gives ~3 cat per sec, so this tests a daily load
-    for i in range(3*24*36*hundred):
-        id = random.randint(101, 612776279041945600)
-        retweet = random.randint(1, 987)
-        tweetSender.sendTweet(1, id, retweet, soft=True)
-    tweetSender.listeners['DistributorListener'].stop()
-
-
 def test_exceptionsAreSwallowed_andNoOneCares():
     tweetSender = TweetSender()
     tweetSender.createAndSendTweet(1, 0)
