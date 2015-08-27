@@ -8,73 +8,80 @@ import RetweetListener as rt
 from time import sleep
 
 
-def createListeners():
-    pl.fileName = 'perfCountersTest.pydat'
-    rt.fileName = 'RetweetListenerTest.txt'
-    botSettings.tweetPerBracket = 2
+class TweetSender(object):
 
-    def x(self):
-        return 1 * botSettings.bracketWidth
-    distL.DistributorListener._getCurrentTime = x
+    def __init__(self):
+        pl.fileName = 'perfCountersTest.pydat'
+        rt.fileName = 'RetweetListenerTest.txt'
+        botSettings.tweetPerBracket = 2
+        self._lastEvent = botSettings.bracketWidth
 
-    dl = distL.DistributorListener.start().proxy()
-    listeners = dl.actors.get().copy()
-    listeners['DistributorListener'] = dl
-    return listeners
+        def x(self):
+            return 1 * botSettings.bracketWidth
+        distL.DistributorListener._getCurrentTime = x
+
+        dl = distL.DistributorListener.start().proxy()
+        self.listeners = dl.actors.get().copy()
+        self.listeners['DistributorListener'] = dl
+
+    def _addEvent(self, event):
+        if event > self._lastEvent:
+            self._lastEvent = event
+
+    def checkTimeMachine(self, number):
+        x = (number + 1) * botSettings.bracketWidth - 1
+
+        def timeX(self):
+            return x
+        distL.DistributorListener._getCurrentTime = timeX
+
+        def ttX(self, t):
+            return t['created_at']
+        lb.ListenerBase._getTweetTime = ttX
+        self._addEvent(x)
+        self.listeners['DistributorListener'].onChangeBracketInternal(x).get()
+
+    def _createTweet(self, time, id, rt):
+        user = {"followers_count": 42, 'screen_name': 'lo'}
+        created_at = botSettings.bracketWidth * (time + 1) - 1
+        self._addEvent(created_at)
+        return {'id': 42,
+                "created_at": self._lastEvent,
+                'retweeted_status': {
+                    "created_at": created_at,
+                    "id": id,
+                    "entities": {"media": None},
+                    'text': 'Blah',
+                    'favorite_count': rt,
+                    "retweet_count": rt,
+                    "user": user},
+                "user": user}
+
+    def sendTweet(self, time, id, rt, soft=False):
+        tweet = self._createTweet(time, id, rt)
+        if soft:
+            self.listeners['DistributorListener'].processTweet(tweet)
+        else:
+            # get(): Tweets must arrive when I ask for counters
+            self.listeners['DistributorListener'].processTweet(tweet).get()
+            tw = self._createTweet(0, 4242, 1)
+            # get(): Force all RT messages to be sent
+            self.listeners['RetweetListener'].processFilteredTweet(
+                tw['retweeted_status'], self._lastEvent, tw).get()
+
+    def createAndSendTweet(self, now, rtInc):
+        self.checkTimeMachine(now)
+        for i in range(25):
+            tt = i % 5
+            if tt < now + 1:
+                self.sendTweet(tt, i, i + rtInc)
 
 
 def testCreation():
-    old = createListeners()
+    old = TweetSender().listeners
     assert set(old.keys()) == {'PerformanceListener', 'RetweetListener',
                                'DistributorListener'}
     old['DistributorListener'].stop()
-
-
-def checkTimeMachine(listeners, number):
-    def x(self):
-        return (number + 1) * botSettings.bracketWidth - 1
-    distL.DistributorListener._getCurrentTime = x
-    listeners['DistributorListener'].onChangeBracketInternal(x(42)).get()
-
-    def x(self, t):
-        return t['created_at']
-    lb.ListenerBase._getTweetTime = x
-
-
-def createTweet(time, id, rt):
-    user = {"followers_count": 42, 'screen_name': 'lo'}
-    return {'id': 42,
-            "created_at": botSettings.bracketWidth * time,
-            'retweeted_status': {
-                "created_at": botSettings.bracketWidth * time,
-                "id": id,
-                "entities": {"media": None},
-                'text': 'Blah',
-                'favorite_count': rt,
-                "retweet_count": rt,
-                "user": user},
-            "user": user}
-
-
-def sendTweet(l, tweet, soft=False):
-    if soft:
-        l['DistributorListener'].processTweet(tweet)
-    else:
-        # get(): Tweets must arrive when I ask for counters
-        l['DistributorListener'].processTweet(tweet).get()
-        now = distL.DistributorListener._getCurrentTime(42)
-        tw = createTweet(0, 4242, 1)
-        # get(): Force all RT messages to be sent
-        l['RetweetListener'].processFilteredTweet(
-            tw['retweeted_status'], now, tw).get()
-
-
-def createAndSendTweet(listeners, now, rtInc):
-    checkTimeMachine(listeners, now)
-    for i in range(25):
-        tt = i % 5
-        if tt < now + 1:
-            sendTweet(listeners, createTweet(tt, i, i + rtInc))
 
 
 def expectedCounters(time, rtInc):
@@ -90,11 +97,11 @@ def expectedCounters(time, rtInc):
 
 
 def testPerformanceCalculationManyTweets():
-    listeners = createListeners()
+    tweetSender = TweetSender()
     bW = botSettings.bracketWidth
-    perf = listeners['PerformanceListener']
+    perf = tweetSender.listeners['PerformanceListener']
 
-    createAndSendTweet(listeners, 1, 0)
+    tweetSender.createAndSendTweet(1, 0)
     assert 0 not in perf.perfCounters.get()
     assert bW in perf.perfCounters.get()
     assert 0 in perf.perfCounters.get()[bW]
@@ -103,18 +110,18 @@ def testPerformanceCalculationManyTweets():
     assert perf.retweeted.get()[bW] == {'rtC': 7, 'rtId': [1, 6]}
     assert perf.performance.get() == {}
 
-    createAndSendTweet(listeners, 2, 1)
+    tweetSender.createAndSendTweet(2, 1)
     assert perf.perfCounters.get()[2 * bW] == expectedCounters(2, 1)
     assert perf.retweeted.get()[2 * bW] == {'rtC': 11, 'rtId': [2, 7]}
     assert perf.performance.get() == {0: (0, 15 + 20)}
     assert perf.retweeted.get()[bW] == {'rtC': 7, 'rtId': [1, 6]}  # no change
 
-    createAndSendTweet(listeners, 3, 2)
+    tweetSender.createAndSendTweet(3, 2)
     assert perf.perfCounters.get()[3 * bW] == expectedCounters(3, 2)
     assert perf.retweeted.get()[3 * bW] == {'rtC': 15, 'rtId': [3, 8]}
     assert perf.performance.get() == {0: (0, 35), bW: (2, (21 + 16 + 2))}
 
-    createAndSendTweet(listeners, 4, 3)
+    tweetSender.createAndSendTweet(4, 3)
     assert perf.perfCounters.get()[4 * bW] == expectedCounters(4, 3)
     assert perf.retweeted.get()[4 * bW] == {'rtC': 19, 'rtId': [4, 9]}
     assert perf.performance.get() == {
@@ -122,48 +129,48 @@ def testPerformanceCalculationManyTweets():
         bW: (2,  (21 + 16 + 2 * 1)),
         2 * bW: (2, (22 + 17 + 2 * 2))}
 
-    listeners['DistributorListener'].stop()
+    tweetSender.listeners['DistributorListener'].stop()
 
 
 def testPerformanceCalculationFewTweets():
-    listeners = createListeners()
+    tweetSender = TweetSender()
     bW = botSettings.bracketWidth
-    perf = listeners['PerformanceListener']
+    perf = tweetSender.listeners['PerformanceListener']
 
-    createAndSendTweet(listeners, 1, 0)
-    checkTimeMachine(listeners, 2)
-    sendTweet(listeners, createTweet(1, 6, 17))
-    sendTweet(listeners, createTweet(2, 21, 1))
-    sendTweet(listeners, createTweet(2, 22, 2))
-    sendTweet(listeners, createTweet(2, 23, 3))
+    tweetSender.createAndSendTweet(1, 0)
+    tweetSender.checkTimeMachine(2)
+    tweetSender.sendTweet(1, 6, 17)
+    tweetSender.sendTweet(2, 21, 1)
+    tweetSender.sendTweet(2, 22, 2)
+    tweetSender.sendTweet(2, 23, 3)
     assert perf.performance.get() == {0: (0, 35)}
 
-    checkTimeMachine(listeners, 3)
-    sendTweet(listeners, createTweet(2, 21, 2))
-    sendTweet(listeners, createTweet(2, 22, 4))
+    tweetSender.checkTimeMachine(3)
+    tweetSender.sendTweet(2, 21, 2)
+    tweetSender.sendTweet(2, 22, 4)
 
-    sendTweet(listeners, createTweet(3, 31, 0))
-    sendTweet(listeners, createTweet(3, 31, 1))  # cannot retweet again
+    tweetSender.sendTweet(3, 31, 0)
+    tweetSender.sendTweet(3, 31, 1)  # no retweet again
 # Test reloading: Send non-retweetable; otherwise it is saved after a retweet
-    sendTweet(listeners, createTweet(3, 31, 41))  # forgotten tweet
-    sendTweet(listeners, createTweet(2, 22, 42))
-    listeners['DistributorListener'].onStart().get()
-    sendTweet(listeners, createTweet(3, 32, 0))
-    sendTweet(listeners, createTweet(3, 33, 3))
+    tweetSender.sendTweet(3, 31, 41)  # forgotten tweet
+    tweetSender.sendTweet(2, 22, 42)
+    tweetSender.listeners['DistributorListener'].onStart().get()
+    tweetSender.sendTweet(3, 32, 0)
+    tweetSender.sendTweet(3, 33, 3)
 
-    sendTweet(listeners, createTweet(3, 32, 2))
+    tweetSender.sendTweet(3, 32, 2)
     assert perf.performance.get()[bW] == (11, (21 + 17))
 
-    checkTimeMachine(listeners, 4)
-    sendTweet(listeners, createTweet(4, 81, 1))
+    tweetSender.checkTimeMachine(4)
+    tweetSender.sendTweet(4, 81, 1)
     assert perf.performance.get()[2 * bW] == ((1 + 2), (3 + 4))
 
-    checkTimeMachine(listeners, 5)
-    sendTweet(listeners, createTweet(4, 81, 2))
-    sendTweet(listeners, createTweet(5, 612776279041945600, 1))
+    tweetSender.checkTimeMachine(5)
+    tweetSender.sendTweet(4, 81, 2)
+    tweetSender.sendTweet(5, 612776279041945600, 1)
     assert perf.performance.get()[3 * bW] == (2, 5)
 
-    checkTimeMachine(listeners, 6)
+    tweetSender.checkTimeMachine(6)
     assert perf.performance.get()[4 * bW] == (1, 2)
     assert perf.perfCounters.get() == {
         4 * bW: {4 * bW: {42: [(-1, 81)], 81: 1}},
@@ -171,40 +178,35 @@ def testPerformanceCalculationFewTweets():
                  5 * bW: {42: [(-1, 612776279041945600)],
                           612776279041945600: 1}}}
 
-    checkTimeMachine(listeners, 7)
+    tweetSender.checkTimeMachine(7)
     assert perf.perfCounters.get() == {
         5 * bW: {4 * bW: {42: [(-2, 81)], 81: 2},
                  5 * bW: {42: [(-1, 612776279041945600)],
                           612776279041945600: 1}}}
 
-    checkTimeMachine(listeners, 8)
+    tweetSender.checkTimeMachine(8)
     assert perf.performance.get()[6 * bW] == (0, 0)
     assert perf.perfCounters.get() == {}
-    listeners['DistributorListener'].stop()
+    tweetSender.listeners['DistributorListener'].stop()
 
 
 def testHeavyLoad():
-    def x(*args):
-        pass
-    # IO is boring and paid gradually
-    pl.PerformanceListener.saveData = x
-    rt.RetweetListener._logTweet = x
-    listeners = createListeners()
-    createAndSendTweet(listeners, 1, 0)
-    checkTimeMachine(listeners, 2)
+    tweetSender = TweetSender()
+    tweetSender.createAndSendTweet(1, 0)
+    tweetSender.checkTimeMachine(2)
     # TODO: this takes a long-long time!
     hundred = 1  # stream API gives ~3 cat per sec, so this tests a daily load
     for i in range(3*24*36*hundred):
         id = random.randint(101, 612776279041945600)
         retweet = random.randint(1, 987)
-        sendTweet(listeners, createTweet(1, id, retweet), soft=True)
-    listeners['DistributorListener'].stop()
+        tweetSender.sendTweet(1, id, retweet, soft=True)
+    tweetSender.listeners['DistributorListener'].stop()
 
 
 def test_exceptionsAreSwallowed_andNoOneCares():
-    listeners = createListeners()
-    createAndSendTweet(listeners, 1, 0)
-    checkTimeMachine(listeners, 2)
+    tweetSender = TweetSender()
+    tweetSender.createAndSendTweet(1, 0)
+    tweetSender.checkTimeMachine(2)
 
     def x(*args):
         if 2 == random.randint(1, 6):
@@ -215,16 +217,17 @@ def test_exceptionsAreSwallowed_andNoOneCares():
         id = random.randint(101, 612776279041945600)
         idSet.add(id)
         retweet = random.randint(1, 154)
-        sendTweet(listeners, createTweet(2, id, retweet), soft=True)
+        tweetSender.sendTweet(2, id, retweet, soft=True)
     sleep(0.1)  # TODO: find out the way to do proper synchronization!
 
     def x(*args):
         pass
     rt.RetweetListener._logTweet = x
-    createAndSendTweet(listeners, 3, 2)
-    perfCounters = listeners['PerformanceListener'].perfCounters.get()
+    tweetSender.createAndSendTweet(3, 2)
+    perfCounters = \
+        tweetSender.listeners['PerformanceListener'].perfCounters.get()
     bW = botSettings.bracketWidth
     assert set(perfCounters.keys()) == {bW, 2*bW, 3*bW}
     assert set(perfCounters[2*bW][2*bW].keys()) == idSet
     # TODO: check what was retweeted
-    listeners['DistributorListener'].stop()
+    tweetSender.listeners['DistributorListener'].stop()
