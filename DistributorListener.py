@@ -19,6 +19,12 @@ class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
             v.actors = self.actors
         self._currentBracket = None
 
+    def flush(self):
+        result = super(DistributorListener, self).flush()
+        for _, v in self.actors.items():
+            result += v.flush().get()
+        return result
+
     def _sendTweetTo(self, tweet, currentTime, fullTweet):
         for _, v in self.actors.items():
             v.processFilteredTweet(tweet, currentTime, fullTweet)
@@ -42,7 +48,6 @@ class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
         cB = self.getBracket(currentTime)
         if self._currentBracket != cB:
             for _, v in self.actors.items():
-                # TODO: get is needed for testing
                 v.onChangeBracket(self._currentBracket).get()
             self._currentBracket = cB
 

@@ -4,7 +4,6 @@ import botSettings
 import DistributorListener as distL
 import PerformanceListener as pl
 import RetweetListener as rt
-from time import sleep
 
 
 class TweetSender(object):
@@ -26,7 +25,8 @@ class TweetSender(object):
     def checkTimeMachine(self, number):
         x = (number + 1) * botSettings.bracketWidth - 1
         self._addEvent(x)
-        self.listeners['DistributorListener'].onChangeBracketInternal(x).get()
+        self.listeners['DistributorListener'].onChangeBracketInternal(x)
+        self.listeners['DistributorListener'].flush().get()
 
     def _createTweet(self, time, id, rt):
         user = {"followers_count": 42, 'screen_name': 'lo'}
@@ -46,15 +46,9 @@ class TweetSender(object):
 
     def sendTweet(self, time, id, rt, soft=False):
         tweet = self._createTweet(time, id, rt)
-        if soft:
-            self.listeners['DistributorListener'].processTweet(tweet)
-        else:
-            # get(): Tweets must arrive when I ask for counters
-            self.listeners['DistributorListener'].processTweet(tweet).get()
-            tw = self._createTweet(0, 4242, 1)
-            # get(): Force all RT messages to be sent
-            self.listeners['RetweetListener'].processFilteredTweet(
-                tw['retweeted_status'], self._lastEvent, tw).get()
+        self.listeners['DistributorListener'].processTweet(tweet)
+        if not soft:
+            self.listeners['DistributorListener'].flush().get()
 
     def createAndSendTweet(self, now, rtInc):
         self.checkTimeMachine(now)
@@ -205,7 +199,7 @@ def test_exceptionsAreSwallowed_andNoOneCares():
         idSet.add(id)
         retweet = random.randint(1, 154)
         tweetSender.sendTweet(2, id, retweet, soft=True)
-    sleep(0.1)  # TODO: find out the way to do proper synchronization!
+    print(tweetSender.listeners['DistributorListener'].flush().get())
 
     def x(*args):
         pass

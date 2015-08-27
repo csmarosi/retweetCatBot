@@ -37,3 +37,6 @@ class ListenerBase(object):
 
     def saveData(self):
         pass
+
+    def flush(self):
+        return 'Flush!' + type(self).__name__
