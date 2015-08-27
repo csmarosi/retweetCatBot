@@ -13,9 +13,14 @@ RT = {'retweeted_status': tweet}
 
 class TestNormalWorking(unittest.TestCase):
     def setUp(self):
+        pl.fileName = 'perfCountersTest.pydat'
         self.o = pl.PerformanceListener()
         self.now = int(time.time())
         self.tweetBracket = 1435085071 - 1435085071 % botSettings.bracketWidth
+
+    def test_dataFileNotExist(self):
+        self.o.onStart()
+        self.assertEqual({}, self.o.perfCounters)
 
     def test_getTime(self):
         self.assertEqual(

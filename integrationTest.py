@@ -1,7 +1,6 @@
 from heapq import heappush
 import random
 import botSettings
-import ListenerBase as lb
 import DistributorListener as distL
 import PerformanceListener as pl
 import RetweetListener as rt
@@ -16,10 +15,6 @@ class TweetSender(object):
         botSettings.tweetPerBracket = 2
         self._lastEvent = botSettings.bracketWidth
 
-        def x(self):
-            return 1 * botSettings.bracketWidth
-        distL.DistributorListener._getCurrentTime = x
-
         dl = distL.DistributorListener.start().proxy()
         self.listeners = dl.actors.get().copy()
         self.listeners['DistributorListener'] = dl
@@ -30,14 +25,6 @@ class TweetSender(object):
 
     def checkTimeMachine(self, number):
         x = (number + 1) * botSettings.bracketWidth - 1
-
-        def timeX(self):
-            return x
-        distL.DistributorListener._getCurrentTime = timeX
-
-        def ttX(self, t):
-            return t['created_at']
-        lb.ListenerBase._getTweetTime = ttX
         self._addEvent(x)
         self.listeners['DistributorListener'].onChangeBracketInternal(x).get()
 

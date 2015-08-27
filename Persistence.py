@@ -2,7 +2,6 @@ import pickle
 import os.path
 
 
-# TODO: it should save to json format
 class Persistence(object):
     """Saves/loads data. Works synchronously."""
 

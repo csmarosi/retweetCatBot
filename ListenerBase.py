@@ -12,7 +12,11 @@ class ListenerBase(object):
         return time - time % botSettings.bracketWidth
 
     def _getTweetTime(self, tweet):
-        tS = time.strptime(tweet['created_at'], "%a %b %d %H:%M:%S +0000 %Y")
+        tweetTime = tweet['created_at']
+        # TODO: ideally the time should be rewritten to int at the beginning
+        if isinstance(tweetTime, int):
+            return tweetTime
+        tS = time.strptime(tweetTime, "%a %b %d %H:%M:%S +0000 %Y")
         return int(calendar.timegm(tS))
 
     def getBracket(self, currentTime):
@@ -32,7 +36,4 @@ class ListenerBase(object):
         pass
 
     def saveData(self):
-        pass
-
-    def processTweet(self, tweet):
         pass

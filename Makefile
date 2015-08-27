@@ -1,8 +1,7 @@
 .PHONY : all clean cleandata
 
-all:
+all: clean
 	test -L botSettings.py || ln -s botSettingsDemo.py botSettings.py
-	coverage erase
 	coverage run -p --branch --source . -m py.test \
         PerformanceListenerTest.py RetweetListenerTest.py
 	time coverage run -p --branch --source . -m py.test -vv -s integrationTest.py

@@ -1,4 +1,3 @@
-import time
 import pykka
 import botSettings
 import ListenerBase as lb
@@ -18,17 +17,11 @@ class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
             rl.RetweetListener.start().proxy()
         for _, v in self.actors.items():
             v.actors = self.actors
-        self._currentBracket = self.getBracket(self._getCurrentTime())
+        self._currentBracket = None
 
-    def _getCurrentTime(self):
-        return int(time.time())
-
-    def _sendTweetTo(self, method, tweet, currentTime, fullTweet=None):
+    def _sendTweetTo(self, tweet, currentTime, fullTweet):
         for _, v in self.actors.items():
-            if 'processTweet' == method:
-                v.processTweet(tweet)
-            elif 'processFilteredTweet' == method:
-                v.processFilteredTweet(tweet, currentTime, fullTweet)
+            v.processFilteredTweet(tweet, currentTime, fullTweet)
 
     def _sendSave(self):
         for _, v in self.actors.items():
@@ -43,6 +36,9 @@ class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
             v.onStop()
 
     def onChangeBracketInternal(self, currentTime):
+        if self._currentBracket is None:
+            self._currentBracket = self.getBracket(currentTime)
+            return
         cB = self.getBracket(currentTime)
         if self._currentBracket != cB:
             for _, v in self.actors.items():
@@ -51,16 +47,14 @@ class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
             self._currentBracket = cB
 
     def processTweet(self, tweet):
-        currentTime = self._getCurrentTime()
+        currentTime = self._getTweetTime(tweet)
         self.onChangeBracketInternal(currentTime)
         if 0 == self._counter % botSettings.saveInterval:
             self._sendSave()
         self._counter += 1
-        self._sendTweetTo('processTweet', tweet, currentTime)
         if 'retweeted_status' in tweet:
             rt = tweet['retweeted_status']
             if 'entities' in rt and 'media' in rt['entities']:
                 dT = self.getBracket(currentTime) - self.getTweetBracket(rt)
                 if dT / botSettings.bracketWidth < 3:
-                    self._sendTweetTo('processFilteredTweet',
-                                      rt, currentTime, tweet)
+                    self._sendTweetTo(rt, currentTime, tweet)
