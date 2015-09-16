@@ -6,6 +6,7 @@ botSettings.py
 RetweetListener*.txt
 perfCounters*.pydat
 privateNotes
+retweetDistribution*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

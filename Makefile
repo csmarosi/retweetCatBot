@@ -1,4 +1,4 @@
-.PHONY : all clean cleandata replay
+.PHONY : all clean cleandata replay plot
 
 all: clean
 	test -L botSettings.py || ln -s botSettingsDemo.py botSettings.py
@@ -20,3 +20,6 @@ replay: clean cleandata
 	time coverage run --branch --source src/ replayTest.py | tee replayOut
 	diff replayOut RetweetListener_expected.txt ; rm -f replayOut
 	coverage report && coverage html && rm -f RetweetListener.txt
+
+plot:
+	time python3 plotLogs.py
