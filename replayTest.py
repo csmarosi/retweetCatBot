@@ -16,9 +16,15 @@ def main():
     distributorListener = dl.DistributorListener.start().proxy()
     distributorListener.onStart()
     mediaIsPresent = {'media': True}
+    flushCounter = 0
     for tweet in tweetStream:
         tweet['retweeted_status']['entities'] = mediaIsPresent
         distributorListener.processTweet(tweet)
+        flushCounter += 1
+        if flushCounter > 40123:
+            distributorListener.flush().get()
+            sys.stdout.flush()
+            flushCounter = 0
     distributorListener.flush().get()
     distributorListener.stop()
 

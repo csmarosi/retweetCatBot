@@ -40,7 +40,7 @@ def main():
 
     l = MagicListener()
     stream = tweepy.Stream(auth, l)
-# TODO: yes, it is hard-coded because YAGNI; stream.sample()
+    # it is hard-coded because YAGNI; use stream.sample() for the full stream
     stream.filter(track=['cat'], languages=['en'])
 
 
