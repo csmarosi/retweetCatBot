@@ -30,9 +30,11 @@ class RetweetListener(lb.ListenerBase, pykka.ThreadingActor):
         return retweeted
 
     def _retweetCondtional(self, tweet, currentTime, cB):
-        bStat = float(currentTime - cB) / botSettings.bracketWidth
-        followers = tweet['user']['followers_count']
-        if followers > botSettings.followMax * (1 - bStat / cutoff):
+        tAge = max(currentTime - self._getTweetTime(tweet),
+                   botSettings.minAge)
+        rtCount = tweet['retweet_count']
+        retweetedIndex = rtCount / tAge
+        if retweetedIndex > botSettings.minRetweetedIndex:
             self._retweet(tweet, cB)
 
     def processFilteredTweet(self, tweet, currentTime, fullTweet):

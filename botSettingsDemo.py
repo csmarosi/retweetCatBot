@@ -8,5 +8,6 @@ tweetPerBracket = 5
 
 # Change these when actually retweeting
 bracketWidth = 3600*24
-followMax = 5987123
 postToTwitter = False
+minAge = 256
+minRetweetedIndex = 0.5

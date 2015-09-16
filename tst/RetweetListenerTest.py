@@ -1,16 +1,19 @@
 import unittest
 import botSettings
 from ..src import RetweetListener as rl
-from ..src import ListenerBase as lb
+
+
+currentTime = 1435536000
 
 
 class TweetSpy(object):
     def __init__(self):
         self.rt = []
         self.pt = []
+        self.getResult = True
 
     def get(self):
-        return True
+        return self.getResult
 
     def addReTweetedIfCan(self, *args):
         return self
@@ -22,8 +25,11 @@ class TweetSpy(object):
         self.pt.append(text)
 
 
-def createTweet(id, followers):
-    return {'id': id, 'user': {'followers_count': followers}}
+def createTweet(id, rtCount):
+    return {'id': id,
+            'created_at': currentTime,
+            'retweet_count': rtCount,
+            'user': {'followers_count': 0}}
 
 
 class TestNormalWorking(unittest.TestCase):
@@ -35,33 +41,39 @@ class TestNormalWorking(unittest.TestCase):
         self.o = rl.RetweetListener()
         self.o.actors = {}
         self.o.poster = TweetSpy()
-        self.o.actors['PerformanceListener'] = TweetSpy()
-        botSettings.bracketWidth = 3600 * 24
-        botSettings.followMax = 123
+        self.o.actors['PerformanceListener'] = self.o.poster
 
     def test_printTime(self):
         botSettings.bracketWidth = 3600
-        self.o.retweetPerformance(1435536000, (1, 2))
+        self.o.retweetPerformance(currentTime, (1, 2))
         self.assertEqual(
             self.o.poster.pt,
             ['For time 1435536000, captured 1 retweet out of 2'])
 
     def test_printDay(self):
-        self.o.retweetPerformance(1435536000, (1, 2))
+        self.o.retweetPerformance(currentTime, (1, 2))
         self.assertEqual(
             self.o.poster.pt,
             ['On Monday, captured 1 retweet out of 2'])
 
     def test_postRetweet(self):
-        def x(self, t):
-            return 1435536000
-        lb.ListenerBase._getTweetTime = x
-        self.o.processFilteredTweet(createTweet(1, 123), 1435536000, None)
-        self.o.processFilteredTweet(createTweet(2, 124), 1435536000, None)
-        day = int(3600 * 24 * 0.95)
-        self.o.processFilteredTweet(createTweet(3, 2), 1435536000 + day - 1,
-                                    None)
-        self.o.processFilteredTweet(createTweet(4, 0), 1435536000 + day - 1,
-                                    None)
-        self.o.processFilteredTweet(createTweet(5, -1), 1435536000 + day, None)
-        self.assertEqual(self.o.poster.rt, [2, 3, 5])
+        mA = botSettings.minAge
+        mR = botSettings.minRetweetedIndex
+
+        tweet = createTweet(1, mR * mA + 1)
+        self.o.processFilteredTweet(tweet, currentTime, None)
+
+        tweet = createTweet(2, 3 * mA * mR)
+        self.o.processFilteredTweet(tweet, currentTime + 3 * mA, None)
+
+        tweet = createTweet(3, 3 * mA * mR + 1)
+        self.o.processFilteredTweet(tweet, currentTime + 3 * mA, None)
+
+        tweet = createTweet(4, 0)
+        day = botSettings.bracketWidth
+        self.o.processFilteredTweet(tweet, currentTime + day - 1, None)
+
+        self.o.poster.getResult = False
+        tweet = createTweet(5, 2 * mA * mR)
+        self.o.processFilteredTweet(tweet, currentTime + mA + 1, None)
+        self.assertEqual(self.o.poster.rt, [1, 3, 4])
