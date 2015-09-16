@@ -1,5 +1,5 @@
 import json
-import ListenerBase as lb
+from . import ListenerBase as lb
 
 
 class TweetLogger(lb.ListenerBase):

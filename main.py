@@ -5,7 +5,7 @@ import traceback
 import json
 import tweepy
 import botSettings
-import DistributorListener as dl
+from src import DistributorListener as dl
 
 
 class MagicListener(tweepy.StreamListener):

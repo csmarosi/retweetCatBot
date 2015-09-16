@@ -1,7 +1,7 @@
 import time
 import unittest
 import botSettings
-import PerformanceListener as pl
+from ..src import PerformanceListener as pl
 
 tweet = {
     "created_at": "Tue Jun 23 18:44:31 +0000 2015",

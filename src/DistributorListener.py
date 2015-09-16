@@ -1,8 +1,8 @@
 import pykka
 import botSettings
-import ListenerBase as lb
-import PerformanceListener as pl
-import RetweetListener as rl
+from . import ListenerBase as lb
+from . import PerformanceListener as pl
+from . import RetweetListener as rl
 
 
 class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):

@@ -2,7 +2,7 @@
 
 import sys
 import json
-import DistributorListener as dl
+from src import DistributorListener as dl
 
 
 def main():

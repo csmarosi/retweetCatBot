@@ -1,7 +1,7 @@
 import unittest
 import botSettings
-import RetweetListener as rl
-import ListenerBase as lb
+from ..src import RetweetListener as rl
+from ..src import ListenerBase as lb
 
 
 class TweetSpy(object):

@@ -1,8 +1,8 @@
 from heapq import heappush, nsmallest
 import pykka
 import botSettings
-import ListenerBase as lb
-import Persistence
+from . import ListenerBase as lb
+from . import Persistence
 
 
 fileName = 'perfCounters.pydat'

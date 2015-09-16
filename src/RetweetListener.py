@@ -1,9 +1,9 @@
 from time import strftime, gmtime
 import pykka
 import botSettings
-import ListenerBase as lb
-import PostTweet
-import TweetLogger
+from . import ListenerBase as lb
+from . import PostTweet
+from . import TweetLogger
 
 
 fileName = 'RetweetListener.txt'

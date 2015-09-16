@@ -1,9 +1,9 @@
 from heapq import heappush
 import random
 import botSettings
-import DistributorListener as distL
-import PerformanceListener as pl
-import RetweetListener as rt
+from ..src import DistributorListener as distL
+from ..src import PerformanceListener as pl
+from ..src import RetweetListener as rt
 
 
 class TweetSender(object):
