@@ -25,9 +25,6 @@ class ListenerBase(object):
     def getTweetBracket(self, tweet):
         return self._bracketTime(self._getTweetTime(tweet))
 
-    def onChangeBracket(self, oldBracket):
-        pass
-
     def onStop(self):
         self.stop()
         pass
