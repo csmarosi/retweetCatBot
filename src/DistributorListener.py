@@ -46,7 +46,7 @@ class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
             self._currentBracket = self.getBracket(currentTime)
             return
         cB = self.getBracket(currentTime)
-        if self._currentBracket != cB:
+        if self._currentBracket < cB:
             for _, v in self.actors.items():
                 v.onChangeBracket(self._currentBracket).get()
             self._currentBracket = cB
