@@ -5,13 +5,16 @@ import os.path
 class Persistence(object):
     """Saves/loads data. Works synchronously."""
 
-    def loadData(self, fileName):
-        if os.path.isfile(fileName):
-            with open(fileName, 'rb') as f:
+    def __init__(self, fileName):
+        self.fileName = fileName
+
+    def loadData(self):
+        if os.path.isfile(self.fileName):
+            with open(self.fileName, 'rb') as f:
                 data = pickle.load(f)
                 return data
 
-    def saveData(self, fileName, data):
+    def saveData(self, data):
         # print('============Persistence.saveData()============')
-        with open(fileName, 'wb') as f:
+        with open(self.fileName, 'wb') as f:
             pickle.dump(data, f, protocol=0)

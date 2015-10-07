@@ -28,14 +28,8 @@ class ListenerBase(object):
     def onChangeBracket(self, oldBracket):
         pass
 
-    def onStart(self):
-        pass
-
     def onStop(self):
         self.stop()
-        pass
-
-    def saveData(self):
         pass
 
     def flush(self):

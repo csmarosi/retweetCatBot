@@ -11,15 +11,15 @@ all: clean
 
 clean:
 	find . -name '*.pyc' | xargs rm -rf 
-	rm -rf htmlcov/ .coverage perfCountersTest.pydat RetweetListenerTest.txt
+	rm -rf htmlcov/ .coverage perfCountersTest.pydat \
+        RetweetListenerTest.txt RetweetListenerTest.pydat
 
 cleandata:
-	rm -vf RetweetListener.txt perfCounters.pydat
+	rm -vf RetweetListener.txt RetweetListener.pydat perfCounters.pydat
 
 replay: clean cleandata
-	time coverage run --branch --source src/ replayTest.py | tee replayOut
-	diff replayOut RetweetListener_expected.txt ; rm -f replayOut
-	coverage report && coverage html && rm -f RetweetListener.txt
+	time coverage run --branch --source src/ replayTest.py
+	coverage report && coverage html
 
 plot:
 	time python3 plotLogs.py

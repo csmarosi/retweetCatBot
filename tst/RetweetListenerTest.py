@@ -38,10 +38,14 @@ class TestNormalWorking(unittest.TestCase):
         def x(*args):
             pass
         rl.RetweetListener._logTweet = x
+        rl.persistenceFile = 'RetweetListenerTest.pydat'
         self.o = rl.RetweetListener()
         self.o.actors = {}
         self.o.poster = TweetSpy()
         self.o.actors['PerformanceListener'] = self.o.poster
+
+    def test_dataFileNotExist(self):
+        self.o.onStart()
 
     def test_printTime(self):
         botSettings.bracketWidth = 3600

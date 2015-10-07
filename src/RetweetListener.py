@@ -2,11 +2,13 @@ from time import strftime, gmtime
 import pykka
 import botSettings
 from . import ListenerBase as lb
+from . import Persistence
 from . import PostTweet
 from . import TweetLogger
 
 
 fileName = 'RetweetListener.txt'
+persistenceFile = 'RetweetListener.pydat'
 cutoff = 0.95
 
 
@@ -16,7 +18,17 @@ class RetweetListener(lb.ListenerBase, pykka.ThreadingActor):
         super(RetweetListener, self).__init__()
         self.poster = PostTweet.PostTweet()
         self.tweetLogger = TweetLogger.TweetLogger()
+        self.persistenceListener = Persistence.Persistence(persistenceFile)
         self.cumPerf = (0, 0)
+
+    def onStart(self):
+        d = self.persistenceListener.loadData()
+        if d:
+            (self.cumPerf) = d
+
+    def saveData(self):
+        d = (self.cumPerf)
+        self.persistenceListener.saveData(d)
 
     def _logTweet(self, tweet):
         self.tweetLogger.logTweet(tweet, fileName)
@@ -57,4 +69,5 @@ class RetweetListener(lb.ListenerBase, pykka.ThreadingActor):
         a += p[0]
         b += p[1]
         self.cumPerf = (a, b)
+        self.saveData()
         print('Performance so far:', a/b, self.cumPerf)

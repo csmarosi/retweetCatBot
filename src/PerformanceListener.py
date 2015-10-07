@@ -12,7 +12,7 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
 
     def __init__(self):
         super(PerformanceListener, self).__init__()
-        self.persistenceListener = Persistence.Persistence()
+        self.persistenceListener = Persistence.Persistence(fileName)
         self.perfCounters = {}
         self.retweeted = {}
         self.performance = {}
@@ -67,13 +67,13 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
                 del self.perfCounters[key]
 
     def onStart(self):
-        d = self.persistenceListener.loadData(fileName)
+        d = self.persistenceListener.loadData()
         if d:
             (self.perfCounters, self.retweeted, self.performance) = d
 
     def saveData(self):
         d = (self.perfCounters, self.retweeted, self.performance)
-        self.persistenceListener.saveData(fileName, d)
+        self.persistenceListener.saveData(d)
 
     def onStop(self):
         self.saveData()

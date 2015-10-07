@@ -11,6 +11,7 @@ class TweetSender(object):
     def __init__(self):
         pl.fileName = 'perfCountersTest.pydat'
         rt.fileName = 'RetweetListenerTest.txt'
+        rt.persistenceFile = 'RetweetListenerTest.pydat'
         botSettings.tweetPerBracket = 2
         self._lastEvent = botSettings.bracketWidth
 
