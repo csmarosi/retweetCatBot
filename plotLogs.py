@@ -1,8 +1,7 @@
 import sys
 import json
-import os.path
-import heapq
 from collections import defaultdict
+from time import strftime, gmtime
 import matplotlib.pyplot as plt
 
 
@@ -36,21 +35,7 @@ def reformatStream(data):
     return result
 
 
-def createRearrangedTweets(inName, outName):
-    result = None
-    if not os.path.isfile(outName):
-        d = loadFormattedRawData(inName)
-        result = reformatStream(d)
-        with open(outName, 'w') as f:
-            json.dump(result, f,
-                      sort_keys=True, indent=2, separators=(',', ': '))
-    else:
-        with open(outName, 'r') as data:
-            result = json.load(data)
-    return result
-
-
-def plotDistribution(data):
+def plotDistribution(data, inName):
     dataVector = []
     for i in data:
         dat = data[i]
@@ -72,37 +57,62 @@ def plotDistribution(data):
     fig = plt.figure(figsize=(25, 25))
     ax1 = fig.add_subplot(111)
     ax1.scatter(x, y, marker='.')
-    plt.xlim(0, 24*3600)
-    plt.savefig('retweetDistribution.png')
+    plt.xlim(0, 1200)
+    plt.ylim(0, 2500)
+    plt.savefig(inName.replace('.txt', '.png'))
+
+
+def printRetweetsPerDay(data):
+    retweets = defaultdict(int)
+    retweetsSeen = defaultdict(int)
+    mostRetweets = defaultdict(int)
+    dailyBestTweet = {}
+    secInDay = 60 * 60 * 24
+    for origTweet in data:
+
+        def updateDicts(firstCount, lastCount, key):
+            increment = lastCount - firstCount
+            retweets[key] += increment
+            if increment > mostRetweets[key]:
+                mostRetweets[key] = increment
+                dailyBestTweet[key] = origTweet
+
+        firstCount = None
+        firstCountDay = None
+        day = None
+        lastCount = None
+        for retweet in data[origTweet]['rtData']:
+            day = int(retweet['created_at'] / secInDay)
+            lastCount = retweet['retweet_count']
+            if day != firstCountDay:
+                if firstCountDay:
+                    updateDicts(firstCount, lastCount, day-1)
+                firstCountDay = day
+                firstCount = lastCount - 1
+            retweetsSeen[day] += 1
+        updateDicts(firstCount, lastCount, day)
+
+    print('Day\t retweets\t retweetsSeen\t mostRetweets')
+    for i in sorted(retweets.keys()):
+        dayName = strftime("%A", gmtime(i * secInDay)).ljust(11)
+        print('%s\t%d\t%d\t%d' % (dayName,
+                                  retweets[i],
+                                  retweetsSeen[i],
+                                  mostRetweets[i]))
+    return dailyBestTweet
 
 
 def main():
     inName = 'RetweetListener_offline.txt'
-    outName = 'RetweetListener_forPlot.txt'
-    if 3 == len(sys.argv):
+    if 2 == len(sys.argv):
         inName = sys.argv[1]
-        outName = sys.argv[2]
-    data = createRearrangedTweets(inName, outName)
-    plotDistribution(data)
-    magic(data)
-
-
-def magic(data):
-    words = defaultdict(int)
-    for i in data:
-        dat = data[i]
-        for j in dat['text'].split(' '):
-            word = j if 'http://t.co' in j else j.lower()
-            words[word] += dat['retweet_count']
-    topn = heapq.nlargest(2, data, key=lambda x: data[x]['retweet_count'])
-    for i in topn:
-        dat = data[i]
-        dat.pop('rtData', None)
-        s = json.dumps(dat, sort_keys=True, indent=2, separators=(',', ': '))
-        print(s)
-    topw = heapq.nlargest(9, words, key=lambda x: words[x])
-    for w in topw:
-        print(words[w], w)
+    d = loadFormattedRawData(inName)
+    data = reformatStream(d)
+    dailyBestTweet = printRetweetsPerDay(data)
+    topData = {}
+    for i in dailyBestTweet.values():
+        topData[i] = data[i]
+    plotDistribution(topData, inName)
 
 
 if __name__ == '__main__':
