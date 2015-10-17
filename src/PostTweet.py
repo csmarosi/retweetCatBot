@@ -3,7 +3,6 @@ import botSettings
 
 
 class PostTweet(object):
-
     def __init__(self):
         super(PostTweet, self).__init__()
         k, s = botSettings.getConsumerKeys()

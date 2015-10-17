@@ -8,6 +8,7 @@ all: clean
 	coverage combine && coverage report && coverage html
 	pyflakes *py */*.py
 	pep8 *py */*.py
+	git ls-files | grep '[a-z].py' | xargs yapf -i
 
 clean:
 	find . -name '*.pyc' | xargs rm -rf 

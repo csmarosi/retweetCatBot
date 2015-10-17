@@ -23,14 +23,10 @@ class TestNormalWorking(unittest.TestCase):
         self.assertEqual({}, self.o.perfCounters)
 
     def test_getTime(self):
-        self.assertEqual(
-            self.o._getTweetTime(tweet),
-            1435085071)
+        self.assertEqual(self.o._getTweetTime(tweet), 1435085071)
 
     def test_getBracke(self):
-        self.assertEqual(
-            self.o.getTweetBracket(tweet),
-            self.tweetBracket)
+        self.assertEqual(self.o.getTweetBracket(tweet), self.tweetBracket)
 
     def test_get2Bracke(self):
         self.assertEqual(
@@ -40,9 +36,11 @@ class TestNormalWorking(unittest.TestCase):
     def test_dict(self):
         self.o.processFilteredTweet(tweet, self.now, None)
         self.assertEqual(
-            self.o.perfCounters,
-            {self.o.getBracket(self.now): {
-                self.tweetBracket: {
-                    613417367465373696: 279,
-                    42: [(-279, 613417367465373696)],
-                    }}})
+            self.o.perfCounters, {
+                self.o.getBracket(self.now): {
+                    self.tweetBracket: {
+                        613417367465373696: 279,
+                        42: [(-279, 613417367465373696)],
+                    }
+                }
+            })

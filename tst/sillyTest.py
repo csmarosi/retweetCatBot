@@ -16,6 +16,7 @@ class TotalCoverage(unittest.TestCase):
     def setUp(self):
         def x(self, *args):
             pass
+
         dl.DistributorListener._getTweetTime = x
         dl.DistributorListener.__init__ = x
         dl.DistributorListener.onChangeBracketInternal = x
@@ -29,6 +30,7 @@ class TotalCoverage(unittest.TestCase):
 
         def sendTweetToStub(self, *args):
             o.sendTweetTo += 1
+
         o._sendTweetTo = sendTweetToStub
         o.processTweet({})
         o.processTweet({'retweeted_status': {}})

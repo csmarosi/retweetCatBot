@@ -9,7 +9,6 @@ from src import DistributorListener as dl
 
 
 class MagicListener(tweepy.StreamListener):
-
     def __init__(self):
         super().__init__()
         self.distributorListener = dl.DistributorListener.start().proxy()

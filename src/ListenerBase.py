@@ -4,7 +4,6 @@ import botSettings
 
 
 class ListenerBase(object):
-
     def __init__(self):
         super(ListenerBase, self).__init__()
 
@@ -27,7 +26,6 @@ class ListenerBase(object):
 
     def onStop(self):
         self.stop()
-        pass
 
     def flush(self):
         return 'Flush!' + type(self).__name__

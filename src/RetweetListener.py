@@ -7,14 +7,12 @@ from . import Persistence
 from . import PostTweet
 from . import TweetLogger
 
-
 fileName = 'RetweetListener.txt'
 persistenceFile = 'RetweetListener.pydat'
 cutoff = 0.95
 
 
 class RetweetListener(lb.ListenerBase, pykka.ThreadingActor):
-
     def __init__(self):
         super(RetweetListener, self).__init__()
         self.poster = PostTweet.PostTweet()
@@ -27,8 +25,7 @@ class RetweetListener(lb.ListenerBase, pykka.ThreadingActor):
     def onStart(self):
         d = self.persistenceListener.loadData()
         if d:
-            (self.cumulativePerformance,
-             self.minRetweetedIndex,
+            (self.cumulativePerformance, self.minRetweetedIndex,
              self.tweetLog) = d
 
     def saveData(self):

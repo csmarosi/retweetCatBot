@@ -4,12 +4,10 @@ import botSettings
 from . import ListenerBase as lb
 from . import Persistence
 
-
 fileName = 'perfCounters.pydat'
 
 
 class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
-
     def __init__(self):
         super(PerformanceListener, self).__init__()
         self.persistenceListener = Persistence.Persistence(fileName)

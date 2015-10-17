@@ -7,7 +7,6 @@ from ..src import RetweetListener as rt
 
 
 class TweetSender(object):
-
     def __init__(self):
         pl.fileName = 'perfCountersTest.pydat'
         rt.fileName = 'RetweetListenerTest.txt'
@@ -33,17 +32,20 @@ class TweetSender(object):
         user = {"followers_count": 42, 'screen_name': 'lo'}
         created_at = botSettings.bracketWidth * (time + 1) - 1
         self._addEvent(created_at)
-        return {'id': 42,
-                "created_at": self._lastEvent,
-                'retweeted_status': {
-                    "created_at": created_at,
-                    "id": id,
-                    "entities": {"media": None},
-                    'text': 'Blah',
-                    'favorite_count': rt,
-                    "retweet_count": rt,
-                    "user": user},
-                "user": user}
+        return {
+            'id': 42,
+            "created_at": self._lastEvent,
+            'retweeted_status': {
+                "created_at": created_at,
+                "id": id,
+                "entities": {"media": None},
+                'text': 'Blah',
+                'favorite_count': rt,
+                "retweet_count": rt,
+                "user": user
+            },
+            "user": user
+        }
 
     def sendTweet(self, time, id, rt, soft=False):
         tweet = self._createTweet(time, id, rt)
@@ -61,8 +63,9 @@ class TweetSender(object):
 
 def testCreation():
     old = TweetSender().listeners
-    assert set(old.keys()) == {'PerformanceListener', 'RetweetListener',
-                               'DistributorListener'}
+    assert set(old.keys()) == {
+        'PerformanceListener', 'RetweetListener', 'DistributorListener'
+    }
     old['DistributorListener'].stop()
 
 
@@ -108,8 +111,9 @@ def testPerformanceCalculationManyTweets():
     assert perf.retweeted.get()[4 * bW] == {'rtC': 19, 'rtId': [4, 9]}
     assert perf.performance.get() == {
         0: (0, 35),
-        bW: (2,  (21 + 16 + 2 * 1)),
-        2 * bW: (2, (22 + 17 + 2 * 2))}
+        bW: (2, (21 + 16 + 2 * 1)),
+        2 * bW: (2, (22 + 17 + 2 * 2))
+    }
 
     tweetSender.listeners['DistributorListener'].stop()
 
@@ -133,7 +137,8 @@ def testPerformanceCalculationFewTweets():
 
     tweetSender.sendTweet(3, 31, 0)
     tweetSender.sendTweet(3, 31, 1)  # no retweet again
-# Test reloading: Send non-retweetable; otherwise it is saved after a retweet
+    # Test reloading:
+    # Send non-retweetable; otherwise it is saved after a retweet
     tweetSender.sendTweet(3, 31, 41)  # forgotten tweet
     tweetSender.sendTweet(2, 22, 42)
     tweetSender.listeners['DistributorListener'].onStart().get()
@@ -155,16 +160,25 @@ def testPerformanceCalculationFewTweets():
     tweetSender.checkTimeMachine(6)
     assert perf.performance.get()[4 * bW] == (1, 2)
     assert perf.perfCounters.get() == {
-        4 * bW: {4 * bW: {42: [(-1, 81)], 81: 1}},
-        5 * bW: {4 * bW: {42: [(-2, 81)], 81: 2},
-                 5 * bW: {42: [(-1, 612776279041945600)],
-                          612776279041945600: 1}}}
+        4 * bW: {4 * bW: {42: [(-1, 81)],
+                          81: 1}},
+        5 * bW: {
+            4 * bW: {42: [(-2, 81)],
+                     81: 2},
+            5 * bW: {42: [(-1, 612776279041945600)],
+                     612776279041945600: 1}
+        }
+    }
 
     tweetSender.checkTimeMachine(7)
     assert perf.perfCounters.get() == {
-        5 * bW: {4 * bW: {42: [(-2, 81)], 81: 2},
-                 5 * bW: {42: [(-1, 612776279041945600)],
-                          612776279041945600: 1}}}
+        5 * bW: {
+            4 * bW: {42: [(-2, 81)],
+                     81: 2},
+            5 * bW: {42: [(-1, 612776279041945600)],
+                     612776279041945600: 1}
+        }
+    }
 
     tweetSender.checkTimeMachine(8)
     assert perf.performance.get()[6 * bW] == (0, 0)
@@ -177,10 +191,11 @@ def test_exceptionsAreSwallowed_andNoOneCares():
     tweetSender.createAndSendTweet(1, 0)
     tweetSender.checkTimeMachine(2)
 
-    def x(*args):
+    def logFails(*args):
         if 2 == random.randint(1, 6):
             raise Exception()
-    rt.RetweetListener._logTweet = x
+
+    rt.RetweetListener._logTweet = logFails
     idSet = {42}
     for i in range(198):
         id = random.randint(101, 612776279041945600)
@@ -189,14 +204,15 @@ def test_exceptionsAreSwallowed_andNoOneCares():
         tweetSender.sendTweet(2, id, retweet, soft=True)
     print(tweetSender.listeners['DistributorListener'].flush().get())
 
-    def x(*args):
+    def logOk(*args):
         pass
-    rt.RetweetListener._logTweet = x
+
+    rt.RetweetListener._logTweet = logOk
     tweetSender.createAndSendTweet(3, 2)
     perfCounters = \
         tweetSender.listeners['PerformanceListener'].perfCounters.get()
     bW = botSettings.bracketWidth
-    assert set(perfCounters.keys()) == {bW, 2*bW, 3*bW}
-    assert set(perfCounters[2*bW][2*bW].keys()) == idSet
+    assert set(perfCounters.keys()) == {bW, 2 * bW, 3 * bW}
+    assert set(perfCounters[2 * bW][2 * bW].keys()) == idSet
     # TODO: check what was retweeted
     tweetSender.listeners['DistributorListener'].stop()

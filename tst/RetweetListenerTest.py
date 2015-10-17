@@ -2,7 +2,6 @@ import unittest
 import botSettings
 from ..src import RetweetListener as rl
 
-
 currentTime = 1435536000
 
 
@@ -26,17 +25,19 @@ class TweetSpy(object):
 
 
 def createTweet(id, rtCount):
-    return {'id': id,
-            'created_at': currentTime,
-            'retweet_count': rtCount,
-            'user': {'followers_count': 0}}
+    return {
+        'id': id,
+        'created_at': currentTime,
+        'retweet_count': rtCount,
+        'user': {'followers_count': 0}
+    }
 
 
 class TestNormalWorking(unittest.TestCase):
-
     def setUp(self):
         def x(*args):
             pass
+
         rl.RetweetListener._logTweet = x
         rl.persistenceFile = 'RetweetListenerTest.pydat'
         self.o = rl.RetweetListener()
@@ -57,8 +58,7 @@ class TestNormalWorking(unittest.TestCase):
     def test_printDay(self):
         self.o.retweetPerformance(currentTime, (1, 2))
         self.assertEqual(
-            self.o.poster.pt,
-            ['On Monday, captured 1 retweet out of 2'])
+            self.o.poster.pt, ['On Monday, captured 1 retweet out of 2'])
 
     def test_postRetweet(self):
         mA = botSettings.minAge

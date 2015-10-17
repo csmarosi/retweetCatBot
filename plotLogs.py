@@ -18,6 +18,7 @@ def reformatStream(data):
     def copyKeys(fro, to, keys):
         for key in keys:
             to[key] = fro[key]
+
     for tweet in data:
         rt = tweet['retweeted_status']
         id = rt['id']
@@ -51,7 +52,7 @@ def plotDistribution(data, inName):
             except:
                 print(j)
                 continue
-            dataVector.append((dt, rt, rtt, rt/rtt))
+            dataVector.append((dt, rt, rtt, rt / rtt))
     x = [a[0] for a in dataVector]
     y = [a[1] for a in dataVector]
     fig = plt.figure(figsize=(25, 25))
@@ -86,7 +87,7 @@ def printRetweetsPerDay(data):
             lastCount = retweet['retweet_count']
             if day != firstCountDay:
                 if firstCountDay:
-                    updateDicts(firstCount, lastCount, day-1)
+                    updateDicts(firstCount, lastCount, day - 1)
                 firstCountDay = day
                 firstCount = lastCount - 1
             retweetsSeen[day] += 1
@@ -95,9 +96,7 @@ def printRetweetsPerDay(data):
     print('Day\t retweets\t retweetsSeen\t mostRetweets')
     for i in sorted(retweets.keys()):
         dayName = strftime("%A", gmtime(i * secInDay)).ljust(11)
-        print('%s\t%d\t%d\t%d' % (dayName,
-                                  retweets[i],
-                                  retweetsSeen[i],
+        print('%s\t%d\t%d\t%d' % (dayName, retweets[i], retweetsSeen[i],
                                   mostRetweets[i]))
     return dailyBestTweet
 

@@ -6,7 +6,6 @@ from . import RetweetListener as rl
 
 
 class DistributorListener(lb.ListenerBase, pykka.ThreadingActor):
-
     def __init__(self):
         super(DistributorListener, self).__init__()
         self.actors = {}
