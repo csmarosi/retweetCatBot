@@ -3,10 +3,11 @@ apiKeys.py
 botSettings.py
 
 #Logs/other
-RetweetListener*
+RetweetListener.txt
+RetweetListener.pydat
 perfCounters*.pydat
 privateNotes
-retweetDistribution*
+data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

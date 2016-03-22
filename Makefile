@@ -1,4 +1,4 @@
-.PHONY : all clean cleandata replay plot
+.PHONY : all clean cleandata replay
 
 all: clean
 	test -L botSettings.py || ln -s botSettingsDemo.py botSettings.py
@@ -11,7 +11,7 @@ all: clean
 	git ls-files | grep '[a-z].py' | xargs yapf -i
 
 clean:
-	find . -name '*.pyc' | xargs rm -rf 
+	find . -name '*.pyc' -o -name '__pycache__' -o -name '.cache' | xargs rm -rf
 	rm -rf htmlcov/ .coverage perfCountersTest.pydat \
         RetweetListenerTest.txt RetweetListenerTest.pydat
 
@@ -19,8 +19,5 @@ cleandata:
 	rm -vf RetweetListener.txt RetweetListener.pydat perfCounters.pydat
 
 replay: clean cleandata
-	time coverage run --branch --source src/ replayTest.py
+	time coverage run --branch --source src/ replayTest.py $(filter-out $@,$(MAKECMDGOALS))
 	coverage report && coverage html
-
-plot:
-	time python3 plotLogs.py

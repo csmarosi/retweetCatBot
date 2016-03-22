@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import sys
+import argparse
 import json
 from src import DistributorListener as dl
 from pykka import ActorRegistry
@@ -12,17 +13,8 @@ def startSystem():
     return distributorListener
 
 
-def main():
-    inName = 'RetweetListener_offline.txt'
-    if 2 == len(sys.argv):
-        inName = sys.argv[1]
-    tweetStream = None
-    with open(inName, 'r') as data:
-        tweetStream = json.load(data)
-
+def procesTweetStream(tweetStream, flushCounter, distributorListener):
     mediaIsPresent = {'media': True}
-    flushCounter = 0
-    distributorListener = startSystem()
     for tweet in tweetStream:
         tweet['retweeted_status']['entities'] = mediaIsPresent
         distributorListener.processTweet(tweet)
@@ -35,6 +27,24 @@ def main():
             print('crash!')
             distributorListener = startSystem()
             sys.stdout.flush()
+    return flushCounter
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('inputFiles',
+                        nargs='+',
+                        help='One or more reparsed log files [reParseLog.py]')
+    args = parser.parse_args()
+
+    flushCounter = 0
+    distributorListener = startSystem()
+    for inputFile in args.inputFiles:
+        with open(inputFile, 'r') as data:
+            print('Playing:', inputFile)
+            jsonData = json.load(data)
+            flushCounter = procesTweetStream(jsonData, flushCounter,
+                                             distributorListener)
     distributorListener.flush().get()
     distributorListener.stop()
     for i in ActorRegistry.get_all():

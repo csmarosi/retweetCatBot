@@ -1,4 +1,6 @@
-import sys
+#!/usr/bin/env python3
+
+import argparse
 import json
 from collections import defaultdict
 from time import strftime, gmtime
@@ -102,16 +104,20 @@ def printRetweetsPerDay(data):
 
 
 def main():
-    inName = 'RetweetListener_offline.txt'
-    if 2 == len(sys.argv):
-        inName = sys.argv[1]
-    d = loadFormattedRawData(inName)
-    data = reformatStream(d)
-    dailyBestTweet = printRetweetsPerDay(data)
-    topData = {}
-    for i in dailyBestTweet.values():
-        topData[i] = data[i]
-    plotDistribution(topData, inName)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('inputFiles',
+                        nargs='+',
+                        help='One or more reparsed log files [reParseLog.py]')
+    args = parser.parse_args()
+
+    for inputFile in args.inputFiles:
+        d = loadFormattedRawData(inputFile)
+        data = reformatStream(d)
+        dailyBestTweet = printRetweetsPerDay(data)
+        topData = {}
+        for i in dailyBestTweet.values():
+            topData[i] = data[i]
+        plotDistribution(topData, inputFile)
 
 
 if __name__ == '__main__':
