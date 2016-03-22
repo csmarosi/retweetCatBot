@@ -2,7 +2,19 @@ import time
 import unittest
 import botSettings
 from ..src import PerformanceListener as pl
-from ..tst.commonTstUtil import createTweet
+from ..tst.commonTstUtil import createTweet, currentTime
+
+
+class TweetSpy(object):
+    def __init__(self):
+        self.rt = []
+        self.pt = []
+
+    def retweet(self, id):
+        self.rt.append(id)
+
+    def postTweet(self, text):
+        self.pt.append(text)
 
 
 class TestNormalWorking(unittest.TestCase):
@@ -11,6 +23,7 @@ class TestNormalWorking(unittest.TestCase):
         self.o = pl.PerformanceListener()
         self.now = int(time.time())
         self.tweetBracket = 1435085071 - 1435085071 % botSettings.bracketWidth
+        self.o.poster = TweetSpy()
 
     def test_dataFileNotExist(self):
         self.o.onStart()
@@ -49,6 +62,18 @@ class TestNormalWorking(unittest.TestCase):
                                               {613417367465373696: 279, }},
                           currentBracket: {self.tweetBracket:
                                            {613417367465373696: 297, }}})
-        self.assertEqual(
-            self.o._calculateResult(currentBracket), (self.tweetBracket,
-                                                      (18, 297)))
+        self.o.onChangeBracket(currentBracket)
+        self.assertEqual(self.o.poster.pt,
+                         ['On Tuesday, captured 18 retweet out of 297'])
+
+    def test_printDay(self):
+        tweet = createTweet(1, 12)
+        self.o.processFilteredTweet(tweet, currentTime, None)
+        self.o.addReTweetedIfCan(tweet, currentTime)
+
+        tweet = createTweet(1, 42)
+        self.o.processFilteredTweet(tweet, currentTime, None)
+        self.o.onChangeBracket(currentTime + botSettings.bracketWidth)
+        self.assertEqual(self.o.poster.pt,
+                         ['On Monday, captured 30 retweet out of 42'])
+        self.assertEqual(self.o.poster.rt, [1])

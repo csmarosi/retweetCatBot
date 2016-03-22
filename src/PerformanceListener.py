@@ -2,6 +2,8 @@ import pykka
 import botSettings
 from . import ListenerBase as lb
 from . import Persistence
+from time import strftime, gmtime
+from . import PostTweet
 
 fileName = 'perfCounters.pydat'
 
@@ -13,6 +15,7 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
         self.perfCounters = {}
         self.retweeted = {}
         self.performance = {}
+        self.poster = PostTweet.PostTweet()
 
     def _createRetweetedDict(self, cB):
         if cB not in self.retweeted:
@@ -42,7 +45,12 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
         for i in retweeted:
             yourScore += counters[i]
         self.performance[lastBracket] = (yourScore, topScore)
-        return lastBracket, self.performance[lastBracket]
+
+        assert botSettings.bracketWidth == 3600 * 24
+        n = strftime("%A", gmtime(lastBracket))
+        pStr = 'On %s, captured %d retweet out of %d' % (n, yourScore,
+                                                         topScore)
+        self.poster.postTweet(pStr)
 
     def _createPerfCounterDict(self, cB, tB):
         if cB not in self.perfCounters:
@@ -79,13 +87,10 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
             rt['rtC'] += tweet['retweet_count']
             rt['rtId'] += [tweet['id']]
             self.saveData()
-            return True
-        else:
-            return False
+            self.poster.retweet(tweet['id'])
 
     def onChangeBracket(self, oldBracket):
-        b, p = self._calculateResult(oldBracket)
-        self.actors['RetweetListener'].retweetPerformance(b, p)
+        self._calculateResult(oldBracket)
         self._prunePerfCounterDict(oldBracket)
 
     def processFilteredTweet(self, tweet, currentTime, fullTweet):

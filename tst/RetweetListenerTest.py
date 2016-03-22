@@ -4,23 +4,12 @@ from ..src import RetweetListener as rl
 from ..tst.commonTstUtil import createTweet, currentTime
 
 
-class TweetSpy(object):
+class PerformanceListener(object):
     def __init__(self):
         self.rt = []
-        self.pt = []
-        self.getResult = True
 
-    def get(self):
-        return self.getResult
-
-    def addReTweetedIfCan(self, *args):
-        return self
-
-    def retweet(self, id):
-        self.rt.append(id)
-
-    def postTweet(self, text):
-        self.pt.append(text)
+    def addReTweetedIfCan(self, tweet, currentBracket):
+        self.rt.append(tweet['id'])
 
 
 class TestNormalWorking(unittest.TestCase):
@@ -32,16 +21,11 @@ class TestNormalWorking(unittest.TestCase):
         rl.persistenceFile = 'RetweetListenerTest.pydat'
         self.o = rl.RetweetListener()
         self.o.actors = {}
-        self.o.poster = TweetSpy()
-        self.o.actors['PerformanceListener'] = self.o.poster
+        self.perf = PerformanceListener()
+        self.o.actors['PerformanceListener'] = self.perf
 
     def test_dataFileNotExist(self):
         self.o.onStart()
-
-    def test_printDay(self):
-        self.o.retweetPerformance(currentTime, (1, 2))
-        self.assertEqual(self.o.poster.pt,
-                         ['On Monday, captured 1 retweet out of 2'])
 
     def test_postRetweet(self):
         mA = botSettings.minAge
@@ -60,10 +44,7 @@ class TestNormalWorking(unittest.TestCase):
         day = botSettings.bracketWidth
         self.o.processFilteredTweet(tweet, currentTime + day - 1, None)
 
-        self.o.poster.getResult = False
-        tweet = createTweet(5, 2 * mA * mR)
-        self.o.processFilteredTweet(tweet, currentTime + mA + 1, None)
-        self.assertEqual(self.o.poster.rt, [1, 3, 4])
+        self.assertEqual(self.perf.rt, [1, 3, 4])
 
     def test_internal_tweetLog_update(self):
         tweet = createTweet(1, 24)
