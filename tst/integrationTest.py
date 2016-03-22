@@ -1,4 +1,3 @@
-from heapq import heappush
 import random
 import botSettings
 from ..src import DistributorListener as distL
@@ -66,11 +65,10 @@ def expectedCounters(time, rtInc):
     bW = botSettings.bracketWidth
     result = {}
     for j in range(max(0, time - 2), time + 1):
-        result[j * bW] = {42: []}
+        result[j * bW] = {}
         for i in range(25):
             if j == i % 5:
                 result[j * bW][i] = i + rtInc
-                heappush(result[j * bW][42], (-i - rtInc, i))
     return result
 
 
@@ -152,26 +150,15 @@ def testPerformanceCalculationFewTweets():
 
     tweetSender.checkTimeMachine(6)
     assert perf.performance.get()[4 * bW] == (1, 2)
-    assert perf.perfCounters.get() == {
-        4 * bW: {4 * bW: {42: [(-1, 81)],
-                          81: 1}},
-        5 * bW: {
-            4 * bW: {42: [(-2, 81)],
-                     81: 2},
-            5 * bW: {42: [(-1, 612776279041945600)],
-                     612776279041945600: 1}
-        }
-    }
+    assert perf.perfCounters.get() == {4 * bW: {4 * bW: {81: 1}},
+                                       5 * bW: {4 * bW: {81: 2},
+                                                5 * bW: {612776279041945600: 1
+                                                         }}}
 
     tweetSender.checkTimeMachine(7)
-    assert perf.perfCounters.get() == {
-        5 * bW: {
-            4 * bW: {42: [(-2, 81)],
-                     81: 2},
-            5 * bW: {42: [(-1, 612776279041945600)],
-                     612776279041945600: 1}
-        }
-    }
+    assert perf.perfCounters.get() == {5 * bW: {4 * bW: {81: 2},
+                                                5 * bW: {612776279041945600: 1
+                                                         }}}
 
     tweetSender.checkTimeMachine(8)
     assert perf.performance.get()[6 * bW] == (0, 0)
@@ -189,7 +176,7 @@ def test_exceptionsAreSwallowed_andNoOneCares():
             raise Exception()
 
     rt.RetweetListener._logTweet = logFails
-    idSet = {42}
+    idSet = set()
     for i in range(198):
         id = random.randint(101, 612776279041945600)
         idSet.add(id)

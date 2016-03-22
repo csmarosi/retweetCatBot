@@ -1,4 +1,3 @@
-from heapq import heappush, nsmallest
 import pykka
 import botSettings
 from . import ListenerBase as lb
@@ -25,23 +24,19 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
             c1 = self.perfCounters[observation]
             if tweetTime in c1:
                 c = c1[tweetTime]
-                ol = counters[42]
                 counters.update(c)
-                for i in ol:
-                    if i[1] not in c:
-                        heappush(counters[42], i)
 
     def _calculateResult(self, oldBracket):
         cB = oldBracket
         lastBracket = cB - botSettings.bracketWidth
-        counters = {42: []}
+        counters = {}
         self._updateCounters(lastBracket, lastBracket, counters)
         self._updateCounters(cB, lastBracket, counters)
-        topScore = 0
-        topNum = min(botSettings.tweetPerBracket, len(counters[42]))
-        topData = nsmallest(topNum, counters[42])
-        for i in topData:
-            topScore += counters[i[1]]
+        topData = sorted(
+            [v for _, v in counters.items() if type(v) == int],
+            reverse=True)
+        topNum = min(botSettings.tweetPerBracket, len(topData))
+        topScore = sum(topData[:topNum])
         self._createRetweetedDict(lastBracket)
         retweeted = self.retweeted[lastBracket]['rtId']
         yourScore = 0 - self.retweeted[lastBracket]['rtC']
@@ -55,7 +50,7 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
             self.perfCounters[cB] = {}
         cC = self.perfCounters[cB]
         if tB not in cC:
-            cC[tB] = {42: []}
+            cC[tB] = {}
         return cC[tB]
 
     def _prunePerfCounterDict(self, cB):
@@ -101,4 +96,3 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
         tC = tweet['retweet_count']
         currentCounter = self._createPerfCounterDict(cB, tB)
         currentCounter[tId] = tC
-        heappush(currentCounter[42], (-tC, tId))

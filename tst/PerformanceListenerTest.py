@@ -33,12 +33,22 @@ class TestNormalWorking(unittest.TestCase):
         tweet = createTweet(id=613417367465373696,
                             rtCount=279,
                             created_at="Tue Jun 23 18:44:31 +0000 2015")
-        self.o.processFilteredTweet(tweet, self.now, None)
-        self.assertEqual(self.o.perfCounters, {
-            self.o.getBracket(self.now): {
-                self.tweetBracket: {
-                    613417367465373696: 279,
-                    42: [(-279, 613417367465373696)],
-                }
-            }
-        })
+        self.o.processFilteredTweet(tweet, self.tweetBracket, None)
+        self.o.addReTweetedIfCan(tweet, self.tweetBracket)
+        self.o.processFilteredTweet(tweet, self.tweetBracket, None)
+
+        tweet = createTweet(id=613417367465373696,
+                            rtCount=297,
+                            created_at="Tue Jun 23 18:44:31 +0000 2015")
+        currentBracket = botSettings.bracketWidth + self.o.getBracket(
+            self.tweetBracket)
+        self.o.processFilteredTweet(tweet, currentBracket, None)
+        self.o.processFilteredTweet(tweet, currentBracket, None)
+        self.assertEqual(self.o.perfCounters,
+                         {self.tweetBracket: {self.tweetBracket:
+                                              {613417367465373696: 279, }},
+                          currentBracket: {self.tweetBracket:
+                                           {613417367465373696: 297, }}})
+        self.assertEqual(
+            self.o._calculateResult(currentBracket), (self.tweetBracket,
+                                                      (18, 297)))
