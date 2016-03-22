@@ -1,8 +1,7 @@
 import unittest
 import botSettings
 from ..src import RetweetListener as rl
-
-currentTime = 1435536000
+from ..tst.commonTstUtil import createTweet, currentTime
 
 
 class TweetSpy(object):
@@ -22,15 +21,6 @@ class TweetSpy(object):
 
     def postTweet(self, text):
         self.pt.append(text)
-
-
-def createTweet(id, rtCount):
-    return {
-        'id': id,
-        'created_at': currentTime,
-        'retweet_count': rtCount,
-        'user': {'followers_count': 0}
-    }
 
 
 class TestNormalWorking(unittest.TestCase):
@@ -80,3 +70,26 @@ class TestNormalWorking(unittest.TestCase):
         tweet = createTweet(5, 2 * mA * mR)
         self.o.processFilteredTweet(tweet, currentTime + mA + 1, None)
         self.assertEqual(self.o.poster.rt, [1, 3, 4])
+
+    def test_internal_tweetLog_update(self):
+        tweet = createTweet(1, 24)
+
+        mA = botSettings.minAge
+        self.o.processFilteredTweet(tweet, currentTime + mA + 1, None)
+        tweet = createTweet(1, 42)
+        self.o.processFilteredTweet(tweet, currentTime + mA + 2, None)
+        self.assertEqual(self.o.tweetLog, {1: {'@day': 42, '@minAge': 24}})
+
+    def test_internal_minRetweetedIndex_update(self):
+        mA = botSettings.minAge
+
+        for i in range(botSettings.tweetPerBracket + 1):
+            tweet = createTweet(i, 24)
+            self.o.processFilteredTweet(tweet, currentTime + mA + 1, None)
+
+        mR = botSettings.minRetweetedIndex
+        self.assertEqual(self.o.minRetweetedIndex, mR)
+
+        self.o.onChangeBracket(None)
+        # TODO: these magic constant should not be tested like this
+        self.assertEqual(self.o.minRetweetedIndex, mR * 0.6 + 24 / mA * 0.4)

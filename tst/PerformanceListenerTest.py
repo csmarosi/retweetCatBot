@@ -2,13 +2,7 @@ import time
 import unittest
 import botSettings
 from ..src import PerformanceListener as pl
-
-tweet = {
-    "created_at": "Tue Jun 23 18:44:31 +0000 2015",
-    "id": 613417367465373696,
-    "retweet_count": 279,
-}
-RT = {'retweeted_status': tweet}
+from ..tst.commonTstUtil import createTweet
 
 
 class TestNormalWorking(unittest.TestCase):
@@ -23,9 +17,11 @@ class TestNormalWorking(unittest.TestCase):
         self.assertEqual({}, self.o.perfCounters)
 
     def test_getTime(self):
+        tweet = createTweet(created_at="Tue Jun 23 18:44:31 +0000 2015")
         self.assertEqual(self.o._getTweetTime(tweet), 1435085071)
 
     def test_getBracke(self):
+        tweet = createTweet(created_at="Tue Jun 23 18:44:31 +0000 2015")
         self.assertEqual(self.o.getTweetBracket(tweet), self.tweetBracket)
 
     def test_get2Bracke(self):
@@ -34,6 +30,9 @@ class TestNormalWorking(unittest.TestCase):
             self.now - self.now % botSettings.bracketWidth)
 
     def test_dict(self):
+        tweet = createTweet(id=613417367465373696,
+                            rtCount=279,
+                            created_at="Tue Jun 23 18:44:31 +0000 2015")
         self.o.processFilteredTweet(tweet, self.now, None)
         self.assertEqual(self.o.perfCounters, {
             self.o.getBracket(self.now): {

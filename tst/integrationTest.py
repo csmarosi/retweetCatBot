@@ -4,6 +4,7 @@ import botSettings
 from ..src import DistributorListener as distL
 from ..src import PerformanceListener as pl
 from ..src import RetweetListener as rt
+from ..tst.commonTstUtil import createTweet
 
 
 class TweetSender(object):
@@ -28,23 +29,15 @@ class TweetSender(object):
         self.listeners['DistributorListener'].onChangeBracketInternal(x)
         self.listeners['DistributorListener'].flush().get()
 
-    def _createTweet(self, time, id, rt):
-        user = {"followers_count": 42, 'screen_name': 'lo'}
+    def _createTweet(self, time, id, rtCount):
         created_at = botSettings.bracketWidth * (time + 1) - 1
         self._addEvent(created_at)
+        rt = createTweet(id=id, rtCount=rtCount, created_at=created_at)
         return {
             'id': 42,
             "created_at": self._lastEvent,
-            'retweeted_status': {
-                "created_at": created_at,
-                "id": id,
-                "entities": {"media": None},
-                'text': 'Blah',
-                'favorite_count': rt,
-                "retweet_count": rt,
-                "user": user
-            },
-            "user": user
+            'retweeted_status': rt,
+            'user': rt['user']
         }
 
     def sendTweet(self, time, id, rt, soft=False):
