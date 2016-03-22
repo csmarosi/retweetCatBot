@@ -30,7 +30,8 @@ class TweetLogger(lb.ListenerBase):
         return result
 
     def logTweet(self, tweet, fileName):
-        d = json.dumps(self.compactTweet(tweet),
+        compactTweet = self.compactTweet(tweet)  # yapf workaround
+        d = json.dumps(compactTweet,
                        sort_keys=True,
                        indent=2,
                        separators=(',', ': '))

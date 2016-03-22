@@ -35,12 +35,11 @@ class TestNormalWorking(unittest.TestCase):
 
     def test_dict(self):
         self.o.processFilteredTweet(tweet, self.now, None)
-        self.assertEqual(
-            self.o.perfCounters, {
-                self.o.getBracket(self.now): {
-                    self.tweetBracket: {
-                        613417367465373696: 279,
-                        42: [(-279, 613417367465373696)],
-                    }
+        self.assertEqual(self.o.perfCounters, {
+            self.o.getBracket(self.now): {
+                self.tweetBracket: {
+                    613417367465373696: 279,
+                    42: [(-279, 613417367465373696)],
                 }
-            })
+            }
+        })
