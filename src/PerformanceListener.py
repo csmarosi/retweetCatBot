@@ -17,7 +17,6 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
     def _createRetweetedDict(self, cB):
         if cB not in self.retweeted:
             self.retweeted[cB] = {'rtC': 0, 'rtId': []}
-        return self.retweeted[cB]
 
     def _updateCounters(self, observation, tweetTime, counters):
         if observation in self.perfCounters:
@@ -51,7 +50,6 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
         cC = self.perfCounters[cB]
         if tB not in cC:
             cC[tB] = {}
-        return cC[tB]
 
     def _prunePerfCounterDict(self, cB):
         keys = list(self.perfCounters.keys())
@@ -73,7 +71,8 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
         self.stop()
 
     def addReTweetedIfCan(self, tweet, currentBracket):
-        rt = self._createRetweetedDict(currentBracket)
+        self._createRetweetedDict(currentBracket)
+        rt = self.retweeted[currentBracket]
         isAlreadyRetweeted = tweet['id'] in rt['rtId']
         hasSpace = len(rt['rtId']) < botSettings.tweetPerBracket
         if hasSpace and not isAlreadyRetweeted:
@@ -94,5 +93,6 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
         tB = self.getTweetBracket(tweet)
         tId = tweet['id']
         tC = tweet['retweet_count']
-        currentCounter = self._createPerfCounterDict(cB, tB)
+        self._createPerfCounterDict(cB, tB)
+        currentCounter = self.perfCounters[cB][tB]
         currentCounter[tId] = tC

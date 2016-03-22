@@ -41,7 +41,6 @@ class RetweetListener(lb.ListenerBase, pykka.ThreadingActor):
         if retweeted:
             tId = tweet['id']
             self.poster.retweet(tId)
-        return retweeted
 
     def onChangeBracket(self, oldBracket):
         bestTweets = []
@@ -81,10 +80,9 @@ class RetweetListener(lb.ListenerBase, pykka.ThreadingActor):
                 self._retweet(tweet, cB)
 
     def retweetPerformance(self, pB, p):
-        pStr = 'For time %d, captured %d retweet out of %d' % (pB, p[0], p[1])
-        if botSettings.bracketWidth == 3600 * 24:
-            n = strftime("%A", gmtime(pB))
-            pStr = 'On %s, captured %d retweet out of %d' % (n, p[0], p[1])
+        assert botSettings.bracketWidth == 3600 * 24
+        n = strftime("%A", gmtime(pB))
+        pStr = 'On %s, captured %d retweet out of %d' % (n, p[0], p[1])
         self.poster.postTweet(pStr)
 
         perf = self.cumulativePerformance

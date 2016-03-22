@@ -38,12 +38,6 @@ class TestNormalWorking(unittest.TestCase):
     def test_dataFileNotExist(self):
         self.o.onStart()
 
-    def test_printTime(self):
-        botSettings.bracketWidth = 3600
-        self.o.retweetPerformance(currentTime, (1, 2))
-        self.assertEqual(self.o.poster.pt,
-                         ['For time 1435536000, captured 1 retweet out of 2'])
-
     def test_printDay(self):
         self.o.retweetPerformance(currentTime, (1, 2))
         self.assertEqual(self.o.poster.pt,

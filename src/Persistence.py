@@ -15,6 +15,5 @@ class Persistence(object):
                 return data
 
     def saveData(self, data):
-        # print('============Persistence.saveData()============')
         with open(self.fileName, 'wb') as f:
             pickle.dump(data, f, protocol=0)

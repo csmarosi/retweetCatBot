@@ -5,6 +5,7 @@ import argparse
 import json
 from src import DistributorListener as dl
 from pykka import ActorRegistry
+from time import sleep
 
 
 def startSystem():
@@ -46,7 +47,9 @@ def main():
             flushCounter = procesTweetStream(jsonData, flushCounter,
                                              distributorListener)
     distributorListener.flush().get()
+    sleep(0.05)
     distributorListener.stop()
+    sleep(0.05)
     for i in ActorRegistry.get_all():
         i.stop()
 
