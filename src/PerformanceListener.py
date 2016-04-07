@@ -1,3 +1,4 @@
+import operator
 import pykka
 import botSettings
 from . import ListenerBase as lb
@@ -28,17 +29,21 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
                 c = c1[tweetTime]
                 counters.update(c)
 
-    def _calculateResult(self, oldBracket):
-        cB = oldBracket
-        lastBracket = cB - botSettings.bracketWidth
+    def getTopTweets(self, bracket):
         counters = {}
-        self._updateCounters(lastBracket, lastBracket, counters)
-        self._updateCounters(cB, lastBracket, counters)
-        topData = sorted(
-            [v for _, v in counters.items() if type(v) == int],
-            reverse=True)
+        self._updateCounters(bracket, bracket, counters)
+        cB = bracket + botSettings.bracketWidth
+        self._updateCounters(cB, bracket, counters)
+        topData = sorted(counters.items(),
+                         key=operator.itemgetter(1),
+                         reverse=True)
+        return counters, topData
+
+    def _calculateResult(self, oldBracket):
+        lastBracket = oldBracket - botSettings.bracketWidth
+        counters, topData = self.getTopTweets(lastBracket)
         topNum = min(botSettings.tweetPerBracket, len(topData))
-        topScore = sum(topData[:topNum])
+        topScore = sum([v for k, v in topData[:topNum]])
         self._createRetweetedDict(lastBracket)
         retweeted = self.retweeted[lastBracket]['rtId']
         yourScore = 0 - self.retweeted[lastBracket]['rtC']
@@ -92,6 +97,7 @@ class PerformanceListener(lb.ListenerBase, pykka.ThreadingActor):
     def onChangeBracket(self, oldBracket):
         self._calculateResult(oldBracket)
         self._prunePerfCounterDict(oldBracket)
+        self.saveData()
 
     def processFilteredTweet(self, tweet, currentTime, fullTweet):
         cB = self.getBracket(currentTime)

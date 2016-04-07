@@ -1,4 +1,3 @@
-from heapq import heapify, heapreplace
 import pykka
 import botSettings
 from . import ListenerBase as lb
@@ -37,38 +36,35 @@ class RetweetListener(lb.ListenerBase, pykka.ThreadingActor):
         perf.addReTweetedIfCan(tweet, currentBracket)
 
     def onChangeBracket(self, oldBracket):
-        bestTweets = []
-        for i in range(botSettings.tweetPerBracket):
-            bestTweets.append((i, i))
-        heapify(bestTweets)
-        for tweetStat in self.tweetLog.values():
-            if tweetStat['@day'] > bestTweets[0][0]:
-                new = (tweetStat['@day'], tweetStat['@minAge'])
-                heapreplace(bestTweets, new)
+        perf = self.actors['PerformanceListener']
+        # Note: this is not consistent with the perfocmance metric,
+        # but the difference should be small enough in practice
+        counters, topData = perf.getTopTweets(oldBracket).get()
+        try:
+            nTh = min(botSettings.tweetPerBracket - 1, len(topData))
+            nThBest = self.tweetLog[topData[nTh][0]]['retweet_count']
+            self.tweetLog = {}
+        except:
+            print('TODO: This should not happen in production.')
+            return
         self.minRetweetedIndex *= 0.6
-        self.minRetweetedIndex += 0.4 * bestTweets[0][1] / botSettings.minAge
-        self.tweetLog = {}
-        print('current minRetweetedIndex: ', self.minRetweetedIndex)
+        self.minRetweetedIndex += 0.4 * nThBest / botSettings.minAge
 
     def _retweetCondtional(self, tweet, currentTime, cB):
-        age = currentTime - self._getTweetTime(tweet)
         id = tweet['id']
-        rtCount = tweet['retweet_count']
-        if age > botSettings.minAge:
-            if id not in self.tweetLog:
-                self.tweetLog[id] = {'@minAge': rtCount, '@day': rtCount}
-            else:
-                self.tweetLog[id]['@day'] = rtCount
-        retweetedIndex = rtCount / max(age, botSettings.minAge)
-        if retweetedIndex > self.minRetweetedIndex:
+        if id not in self.tweetLog:
+            self.tweetLog[id] = {}
+        age = currentTime - self._getTweetTime(tweet)
+        if age < botSettings.minAge:
+            tLid = self.tweetLog[id]
+            tLid['retweet_count'] = tweet['retweet_count']
+        retweetedIndex = tweet['retweet_count'] / max(age, botSettings.minAge)
+        bStat = float(currentTime - cB) / botSettings.bracketWidth
+        if retweetedIndex > self.minRetweetedIndex or bStat > cutoff:
             self._retweet(tweet, cB)
 
     def processFilteredTweet(self, tweet, currentTime, fullTweet):
         self._logTweet(fullTweet)
         cB = self.getBracket(currentTime)
         if cB == self.getTweetBracket(tweet):
-            bStat = float(currentTime - cB) / botSettings.bracketWidth
-            if bStat < cutoff:
-                self._retweetCondtional(tweet, currentTime, cB)
-            else:
-                self._retweet(tweet, cB)
+            self._retweetCondtional(tweet, currentTime, cB)
