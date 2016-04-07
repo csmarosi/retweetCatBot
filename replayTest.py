@@ -5,7 +5,6 @@ import argparse
 import json
 from src import DistributorListener as dl
 from pykka import ActorRegistry
-from time import sleep
 
 
 def startSystem():
@@ -28,7 +27,7 @@ def procesTweetStream(tweetStream, flushCounter, distributorListener):
             print('crash!')
             distributorListener = startSystem()
             sys.stdout.flush()
-    return flushCounter
+    return flushCounter, distributorListener
 
 
 def main():
@@ -42,14 +41,13 @@ def main():
     distributorListener = startSystem()
     for inputFile in args.inputFiles:
         with open(inputFile, 'r') as data:
-            print('Playing:', inputFile)
+            print('Playing:', inputFile, 'flushCounter, distributorListener =',
+                  flushCounter, distributorListener)
             jsonData = json.load(data)
-            flushCounter = procesTweetStream(jsonData, flushCounter,
-                                             distributorListener)
+            flushCounter, distributorListener = procesTweetStream(
+                jsonData, flushCounter, distributorListener)
     distributorListener.flush().get()
-    sleep(0.05)
     distributorListener.stop()
-    sleep(0.05)
     for i in ActorRegistry.get_all():
         i.stop()
 
